@@ -1,8 +1,10 @@
 /**
  * Price Scraping Service
  * Extracts prices from product URLs for major retailers
- * Uses best-effort HTML parsing - gracefully handles failures
+ * Uses CSS selectors for known retailers, falls back to AI extraction for others
  */
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface PriceResult {
   success: boolean;
@@ -217,19 +219,31 @@ export async function scrapePrice(url: string): Promise<PriceResult> {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
 
+    let result: PriceResult;
+
     // Route to appropriate scraper based on domain
     if (hostname.includes("amazon.com")) {
-      return await scrapeAmazon(url);
+      result = await scrapeAmazon(url);
     } else if (hostname.includes("walmart.com")) {
-      return await scrapeWalmart(url);
+      result = await scrapeWalmart(url);
     } else if (hostname.includes("target.com")) {
-      return await scrapeTarget(url);
+      result = await scrapeTarget(url);
     } else if (hostname.includes("bestbuy.com")) {
-      return await scrapeBestBuy(url);
+      result = await scrapeBestBuy(url);
     } else {
-      // Generic scraper for other sites
-      return await scrapeGeneric(url);
+      // Try generic scraper first
+      result = await scrapeGeneric(url);
     }
+
+    // If CSS scraping failed and AI is available, try AI extraction
+    if (!result.success && process.env.GEMINI_API_KEY) {
+      console.log(
+        `CSS scraping failed for ${hostname}, trying AI extraction...`
+      );
+      result = await scrapePriceWithAI(url);
+    }
+
+    return result;
   } catch (error) {
     return {
       success: false,
@@ -333,5 +347,134 @@ export function getRetailerName(url: string): string {
     return hostname.replace("www.", "");
   } catch {
     return "Unknown";
+  }
+}
+
+/**
+ * Clean HTML for LLM processing
+ * Removes scripts, styles, and reduces noise
+ */
+function cleanHtmlForLLM(html: string): string {
+  // Remove script and style tags
+  let cleaned = html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+    .replace(/<!--[\s\S]*?-->/g, "");
+
+  // Extract text content focusing on price-related sections
+  const priceKeywords = [
+    "price",
+    "cost",
+    "sale",
+    "deal",
+    "discount",
+    "\\$",
+    "USD",
+  ];
+  const priceRegex = new RegExp(
+    `(${priceKeywords.join("|")}).*?\\$?[0-9,]+\\.\\d{2}`,
+    "gi"
+  );
+
+  const priceMatches = cleaned.match(priceRegex);
+  if (priceMatches) {
+    // If we found price-related sections, focus on those
+    cleaned = priceMatches.join("\n");
+  }
+
+  // Remove excessive whitespace
+  cleaned = cleaned.replace(/\s+/g, " ").trim();
+
+  // Limit to first 5000 characters to reduce token usage
+  return cleaned.substring(0, 5000);
+}
+
+/**
+ * Extract price using Google Gemini AI
+ * Fallback for sites not supported by CSS selectors
+ */
+async function scrapePriceWithAI(url: string): Promise<PriceResult> {
+  try {
+    // Check if API key is configured
+    if (!process.env.GEMINI_API_KEY) {
+      return {
+        success: false,
+        error: "GEMINI_API_KEY not configured",
+      };
+    }
+
+    // Fetch the page
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      },
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Failed to fetch page" };
+    }
+
+    const html = await response.text();
+    const cleanedHtml = cleanHtmlForLLM(html);
+
+    // Initialize Gemini
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+    // Prompt for price extraction
+    const prompt = `You are a price extraction assistant. Extract the current selling price from this product page HTML.
+
+RULES:
+1. Return ONLY a numeric value (e.g., "19.99" or "159")
+2. If there's a sale price and original price, return the SALE PRICE
+3. If out of stock or no price found, return "NONE"
+4. Do not include currency symbols or text
+5. Use decimal format with 2 places if cents exist
+
+HTML Content:
+${cleanedHtml}
+
+PRICE:`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+
+    // Parse the response
+    if (text === "NONE" || text.toLowerCase().includes("out of stock")) {
+      return {
+        success: false,
+        error: "No price found or out of stock",
+      };
+    }
+
+    // Extract number from response
+    const priceMatch = text.match(/([0-9]+\.?[0-9]*)/);
+    if (!priceMatch) {
+      return {
+        success: false,
+        error: "Could not parse price from AI response",
+      };
+    }
+
+    const price = parseFloat(priceMatch[1]);
+    if (isNaN(price) || price <= 0) {
+      return {
+        success: false,
+        error: "Invalid price value",
+      };
+    }
+
+    return {
+      success: true,
+      price,
+      currency: "USD",
+      source: "ai-extracted",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "AI extraction failed",
+    };
   }
 }
