@@ -50,8 +50,23 @@ export const gifts = pgTable("gifts", {
   isPurchased: boolean("is_purchased").default(false).notNull(),
   priority: priorityEnum("priority").default("medium").notNull(),
   notes: text("notes"),
+  priceTrackingEnabled: boolean("price_tracking_enabled").default(false).notNull(),
+  priceAlertThreshold: decimal("price_alert_threshold", { precision: 10, scale: 2 }),
+  lastPriceCheck: timestamp("last_price_check"),
+  lowestPriceEver: decimal("lowest_price_ever", { precision: 10, scale: 2 }),
+  highestPriceEver: decimal("highest_price_ever", { precision: 10, scale: 2 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const priceHistory = pgTable("price_history", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  giftId: uuid("gift_id")
+    .notNull()
+    .references(() => gifts.id, { onDelete: "cascade" }),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  source: text("source"),
+  checkedAt: timestamp("checked_at").defaultNow().notNull(),
 });
 
 export const shareTokens = pgTable("share_tokens", {
@@ -78,7 +93,7 @@ export const listsRelations = relations(lists, ({ one, many }) => ({
   shareTokens: many(shareTokens),
 }));
 
-export const giftsRelations = relations(gifts, ({ one }) => ({
+export const giftsRelations = relations(gifts, ({ one, many }) => ({
   profile: one(profiles, {
     fields: [gifts.userId],
     references: [profiles.id],
@@ -86,6 +101,14 @@ export const giftsRelations = relations(gifts, ({ one }) => ({
   list: one(lists, {
     fields: [gifts.listId],
     references: [lists.id],
+  }),
+  priceHistory: many(priceHistory),
+}));
+
+export const priceHistoryRelations = relations(priceHistory, ({ one }) => ({
+  gift: one(gifts, {
+    fields: [priceHistory.giftId],
+    references: [gifts.id],
   }),
 }));
 
@@ -104,3 +127,5 @@ export type Gift = typeof gifts.$inferSelect;
 export type NewGift = typeof gifts.$inferInsert;
 export type ShareToken = typeof shareTokens.$inferSelect;
 export type NewShareToken = typeof shareTokens.$inferInsert;
+export type PriceHistory = typeof priceHistory.$inferSelect;
+export type NewPriceHistory = typeof priceHistory.$inferInsert;
