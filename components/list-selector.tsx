@@ -20,7 +20,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { List } from "@/db/schema";
-import { createList, LIST_TEMPLATES } from "@/actions/list-actions";
+import { createList } from "@/actions/list-actions";
+import { LIST_TEMPLATES } from "@/lib/constants";
 
 interface ListSelectorProps {
   lists: List[];
