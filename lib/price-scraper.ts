@@ -15,6 +15,68 @@ interface PriceResult {
 }
 
 /**
+ * Retry wrapper for AI calls with exponential backoff
+ * Retries: 0s, 2s, 4s, 8s (3 retries total)
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  baseDelay = 2000
+): Promise<T> {
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("Unknown error");
+
+      if (attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms delay`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+/**
+ * Validate and extract JSON from AI response
+ * Handles malformed responses and provides clear errors
+ */
+function extractAndValidateJSON<T>(
+  text: string,
+  schema: { [K in keyof T]?: string }
+): T | null {
+  try {
+    // Try to find JSON object in response
+    const jsonMatch = text.match(/\{[\s\S]*?\}/);
+    if (!jsonMatch) {
+      console.error("No JSON found in response:", text);
+      return null;
+    }
+
+    // Parse JSON
+    const data = JSON.parse(jsonMatch[0]);
+
+    // Validate required fields exist
+    for (const key in schema) {
+      if (schema[key] === "required" && !(key in data)) {
+        console.error(`Missing required field: ${key}`);
+        return null;
+      }
+    }
+
+    return data as T;
+  } catch (error) {
+    console.error("JSON parse error:", error);
+    return null;
+  }
+}
+
+/**
  * Extract price from Amazon product page
  */
 async function scrapeAmazon(url: string): Promise<PriceResult> {
@@ -472,46 +534,77 @@ async function extractMetadataWithAI(
 
     const cleanedHtml = cleanHtmlForLLM(html);
 
-    const prompt = `You are a product information extraction assistant. Extract the following from this product page:
+    const prompt = `You are a product information extraction assistant. Extract product details from this page.
 
-1. Product Name/Title
-2. Main product image URL (full URL, not relative)
-3. Current selling price (if there's a sale price, use that instead of original)
+CRITICAL RULES - FOLLOW EXACTLY:
+1. Return ONLY a valid JSON object with this exact structure:
+   {
+     "name": "Product Name" or null,
+     "imageUrl": "https://full-url.jpg" or null,
+     "price": 19.99 or null
+   }
 
-Return ONLY a JSON object in this exact format:
-{
-  "name": "Product Name Here",
-  "imageUrl": "https://full-url-to-image.jpg",
-  "price": 19.99
-}
+2. Validation rules:
+   - name: String or null (product title)
+   - imageUrl: Full valid URL starting with http/https, or null
+   - price: Number without currency symbol, or null
 
-If any field is not found, use null for that field.
-For the image URL, prefer og:image or the main product image.
-For price, return only the number without currency symbol.
+3. If there's a sale price and original price, use the SALE PRICE
+4. For imageUrl, prefer og:image meta tag or main product image
+5. Do NOT include any text before or after the JSON
+6. Do NOT use relative URLs for images
+
+EXAMPLES OF VALID RESPONSES:
+{"name": "Sony Headphones", "imageUrl": "https://example.com/img.jpg", "price": 299.99}
+{"name": "Product Name", "imageUrl": null, "price": 49.99}
+{"name": null, "imageUrl": null, "price": null}
 
 HTML Content:
 ${cleanedHtml}
 
 Base URL: ${url}
 
-JSON:`;
+JSON RESPONSE:`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
+    // Retry with backoff
+    const result = await retryWithBackoff(async () => {
+      const res = await model.generateContent(prompt);
+      const text = res.response.text().trim();
 
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return { success: false, error: "Could not parse AI response" };
-    }
+      // Validate JSON response
+      const data = extractAndValidateJSON<{
+        name: string | null;
+        imageUrl: string | null;
+        price: number | null;
+      }>(text, {
+        name: "required",
+        imageUrl: "required",
+        price: "required",
+      });
 
-    const data = JSON.parse(jsonMatch[0]);
+      if (!data) {
+        throw new Error("Invalid JSON response from AI");
+      }
+
+      // Additional validation
+      if (data.imageUrl && !data.imageUrl.startsWith("http")) {
+        console.warn("Invalid image URL, setting to null");
+        data.imageUrl = null;
+      }
+
+      if (data.price && (isNaN(Number(data.price)) || Number(data.price) <= 0)) {
+        console.warn("Invalid price, setting to null");
+        data.price = null;
+      }
+
+      return data;
+    });
 
     return {
       success: true,
-      name: data.name || undefined,
-      imageUrl: data.imageUrl || undefined,
-      price: data.price ? parseFloat(data.price) : undefined,
+      name: result.name || undefined,
+      imageUrl: result.imageUrl || undefined,
+      price: result.price ? parseFloat(result.price.toString()) : undefined,
     };
   } catch (error) {
     return {
@@ -544,50 +637,75 @@ export async function extractMetadataFromScreenshot(
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const prompt = `You are analyzing a screenshot of a product page. Extract the following information:
+    const prompt = `You are analyzing a screenshot of a product page. Extract product information.
 
-1. Product Name/Title
-2. Current Price (if there's both sale and original price, use the sale price)
+CRITICAL RULES - FOLLOW EXACTLY:
+1. Return ONLY a valid JSON object with this exact structure:
+   {
+     "name": "Product Name" or null,
+     "price": 19.99 or null
+   }
 
-Return ONLY a JSON object in this exact format:
-{
-  "name": "Product Name Here",
-  "price": 19.99
-}
+2. Validation rules:
+   - name: String containing the product name/title, or null if not visible
+   - price: Number without currency symbol ($, €, etc.), or null if not visible
 
-If any field is not found, use null for that field.
-For price, return only the number without currency symbol.
-Be precise - only extract what you see clearly in the screenshot.
+3. If you see both sale and original price, use the SALE PRICE (lower one)
+4. Do NOT include any text before or after the JSON
+5. Be precise - only extract what you clearly see in the screenshot
+6. If the screenshot is unclear or not a product page, return nulls
 
-JSON:`;
+EXAMPLES OF VALID RESPONSES:
+{"name": "Sony WH-1000XM5 Headphones", "price": 349.99}
+{"name": "Nike Air Max", "price": null}
+{"name": null, "price": 99.99}
+{"name": null, "price": null}
+
+JSON RESPONSE:`;
 
     // Remove data URL prefix if present
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType: "image/jpeg",
+    // Retry with backoff
+    const result = await retryWithBackoff(async () => {
+      const res = await model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            data: base64Data,
+            mimeType: "image/jpeg",
+          },
         },
-      },
-    ]);
+      ]);
 
-    const text = result.response.text().trim();
+      const text = res.response.text().trim();
 
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return { success: false, error: "Could not parse AI response" };
-    }
+      // Validate JSON response
+      const data = extractAndValidateJSON<{
+        name: string | null;
+        price: number | null;
+      }>(text, {
+        name: "required",
+        price: "required",
+      });
 
-    const data = JSON.parse(jsonMatch[0]);
+      if (!data) {
+        throw new Error("Invalid JSON response from Vision AI");
+      }
+
+      // Additional validation
+      if (data.price && (isNaN(Number(data.price)) || Number(data.price) <= 0)) {
+        console.warn("Invalid price from vision, setting to null");
+        data.price = null;
+      }
+
+      return data;
+    });
 
     return {
       success: true,
-      name: data.name || undefined,
-      price: data.price ? parseFloat(data.price) : undefined,
+      name: result.name || undefined,
+      price: result.price ? parseFloat(result.price.toString()) : undefined,
     };
   } catch (error) {
     return {
@@ -669,42 +787,50 @@ async function scrapePriceWithAI(url: string): Promise<PriceResult> {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    // Prompt for price extraction
+    // Prompt for price extraction with strict formatting
     const prompt = `You are a price extraction assistant. Extract the current selling price from this product page HTML.
 
-RULES:
-1. Return ONLY a numeric value (e.g., "19.99" or "159")
-2. If there's a sale price and original price, return the SALE PRICE
-3. If out of stock or no price found, return "NONE"
-4. Do not include currency symbols or text
-5. Use decimal format with 2 places if cents exist
+CRITICAL RULES - FOLLOW EXACTLY:
+1. Return ONLY a valid JSON object with this exact structure: {"price": NUMBER}
+2. Example valid responses: {"price": 19.99} or {"price": 159.00}
+3. If there's a sale price and original price, use the SALE PRICE
+4. If out of stock or no price found, return: {"price": null}
+5. Do NOT include any text before or after the JSON
+6. Do NOT include currency symbols in the number
+7. Use decimal format (e.g., 19.99 not 19)
 
 HTML Content:
 ${cleanedHtml}
 
-PRICE:`;
+JSON RESPONSE:`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
+    // Retry with backoff
+    const result = await retryWithBackoff(async () => {
+      const res = await model.generateContent(prompt);
+      const text = res.response.text().trim();
 
-    // Parse the response
-    if (text === "NONE" || text.toLowerCase().includes("out of stock")) {
+      // Validate JSON response
+      const data = extractAndValidateJSON<{ price: number | null }>(text, {
+        price: "required",
+      });
+
+      if (!data) {
+        throw new Error("Invalid JSON response from AI");
+      }
+
+      return data;
+    });
+
+    // Check if price was found
+    if (result.price === null) {
       return {
         success: false,
         error: "No price found or out of stock",
       };
     }
 
-    // Extract number from response
-    const priceMatch = text.match(/([0-9]+\.?[0-9]*)/);
-    if (!priceMatch) {
-      return {
-        success: false,
-        error: "Could not parse price from AI response",
-      };
-    }
-
-    const price = parseFloat(priceMatch[1]);
+    // Validate price value
+    const price = parseFloat(result.price.toString());
     if (isNaN(price) || price <= 0) {
       return {
         success: false,
