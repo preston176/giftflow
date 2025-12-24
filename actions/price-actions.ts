@@ -269,19 +269,3 @@ export async function checkPricesForGifts(giftIds: string[]) {
   return results;
 }
 
-/**
- * Get price drop percentage
- */
-export function calculatePriceDrop(
-  currentPrice: string | null,
-  targetPrice: string
-): number | null {
-  if (!currentPrice) return null;
-
-  const current = parseFloat(currentPrice);
-  const target = parseFloat(targetPrice);
-
-  if (isNaN(current) || isNaN(target) || target === 0) return null;
-
-  return ((target - current) / target) * 100;
-}
