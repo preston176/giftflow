@@ -19,7 +19,7 @@ export default async function SharedWishlistPage({
     notFound();
   }
 
-  const { profile, gifts } = data;
+  const { list, profile, gifts } = data;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
@@ -47,8 +47,11 @@ export default async function SharedWishlistPage({
               </Avatar>
               <div>
                 <h2 className="text-3xl font-bold mb-2">
-                  {profile.name}&apos;s Wishlist
+                  {profile.name}&apos;s {list.name}
                 </h2>
+                {list.description && (
+                  <p className="text-muted-foreground mb-2">{list.description}</p>
+                )}
                 <p className="text-muted-foreground flex items-center justify-center gap-2">
                   <Heart className="h-4 w-4 fill-current text-red-500" />
                   {gifts.length} item{gifts.length !== 1 ? "s" : ""} to choose from
