@@ -351,6 +351,177 @@ export function getRetailerName(url: string): string {
 }
 
 /**
+ * Extract product metadata (name, image, price) from URL
+ * Uses AI to intelligently extract all product information
+ */
+export async function extractProductMetadata(url: string): Promise<{
+  success: boolean;
+  name?: string;
+  imageUrl?: string;
+  price?: number;
+  error?: string;
+}> {
+  try {
+    if (!url) {
+      return { success: false, error: "No URL provided" };
+    }
+
+    // Fetch the page
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      },
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Failed to fetch page" };
+    }
+
+    const html = await response.text();
+
+    // Extract metadata using meta tags and common patterns first (fast)
+    let productName = "";
+    let imageUrl = "";
+    let price: number | undefined;
+
+    // Try to get product name from meta tags
+    const titleMatch = html.match(
+      /<meta property="og:title" content="([^"]+)"/i
+    );
+    if (titleMatch) productName = titleMatch[1];
+
+    if (!productName) {
+      const twitterTitleMatch = html.match(
+        /<meta name="twitter:title" content="([^"]+)"/i
+      );
+      if (twitterTitleMatch) productName = twitterTitleMatch[1];
+    }
+
+    if (!productName) {
+      const titleTagMatch = html.match(/<title>([^<]+)<\/title>/i);
+      if (titleTagMatch) productName = titleTagMatch[1];
+    }
+
+    // Try to get image from meta tags
+    const ogImageMatch = html.match(
+      /<meta property="og:image" content="([^"]+)"/i
+    );
+    if (ogImageMatch) imageUrl = ogImageMatch[1];
+
+    if (!imageUrl) {
+      const twitterImageMatch = html.match(
+        /<meta name="twitter:image" content="([^"]+)"/i
+      );
+      if (twitterImageMatch) imageUrl = twitterImageMatch[1];
+    }
+
+    // Try to get price using existing scraper
+    const priceResult = await scrapePrice(url);
+    if (priceResult.success && priceResult.price) {
+      price = priceResult.price;
+    }
+
+    // If we have basic metadata, return it
+    if (productName || imageUrl || price) {
+      return {
+        success: true,
+        name: productName || undefined,
+        imageUrl: imageUrl || undefined,
+        price,
+      };
+    }
+
+    // If no metadata found and AI is available, use AI extraction
+    if (process.env.GEMINI_API_KEY) {
+      const aiResult = await extractMetadataWithAI(html, url);
+      if (aiResult.success) {
+        return aiResult;
+      }
+    }
+
+    return {
+      success: false,
+      error: "Could not extract product information",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Extract product metadata using Gemini AI
+ * Fallback when meta tags don't provide enough info
+ */
+async function extractMetadataWithAI(
+  html: string,
+  url: string
+): Promise<{
+  success: boolean;
+  name?: string;
+  imageUrl?: string;
+  price?: number;
+  error?: string;
+}> {
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const cleanedHtml = cleanHtmlForLLM(html);
+
+    const prompt = `You are a product information extraction assistant. Extract the following from this product page:
+
+1. Product Name/Title
+2. Main product image URL (full URL, not relative)
+3. Current selling price (if there's a sale price, use that instead of original)
+
+Return ONLY a JSON object in this exact format:
+{
+  "name": "Product Name Here",
+  "imageUrl": "https://full-url-to-image.jpg",
+  "price": 19.99
+}
+
+If any field is not found, use null for that field.
+For the image URL, prefer og:image or the main product image.
+For price, return only the number without currency symbol.
+
+HTML Content:
+${cleanedHtml}
+
+Base URL: ${url}
+
+JSON:`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return { success: false, error: "Could not parse AI response" };
+    }
+
+    const data = JSON.parse(jsonMatch[0]);
+
+    return {
+      success: true,
+      name: data.name || undefined,
+      imageUrl: data.imageUrl || undefined,
+      price: data.price ? parseFloat(data.price) : undefined,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "AI extraction failed",
+    };
+  }
+}
+
+/**
  * Clean HTML for LLM processing
  * Removes scripts, styles, and reduces noise
  */
