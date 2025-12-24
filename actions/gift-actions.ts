@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { gifts, profiles } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { extractProductMetadata } from "@/lib/price-scraper";
 
 interface AddGiftInput {
   listId?: string;
@@ -184,4 +185,26 @@ export async function deleteGift(giftId: string) {
     .where(and(eq(gifts.id, giftId), eq(gifts.userId, profile.id)));
 
   revalidatePath("/dashboard");
+}
+
+/**
+ * Extract product information from URL using AI
+ * Returns product name, image, and price
+ */
+export async function fetchProductInfo(url: string) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const metadata = await extractProductMetadata(url);
+    return metadata;
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch product info",
+    };
+  }
 }
