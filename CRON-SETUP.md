@@ -6,6 +6,42 @@ Zawadi now includes **fully automated price checking** using AI (Gemini Vision/T
 
 ---
 
+## ⚡ Quick Start
+
+### Using QStash (Recommended)
+
+1. **Set up environment variables** in `.env`:
+   ```bash
+   # Get from https://console.upstash.com/qstash
+   QSTASH_TOKEN=your_token_here
+   QSTASH_CURRENT_SIGNING_KEY=your_current_key
+   QSTASH_NEXT_SIGNING_KEY=your_next_key
+
+   # Generate with: openssl rand -base64 32
+   CRON_SECRET=your_random_secret
+
+   # Your production URL
+   NEXT_PUBLIC_APP_URL=https://zawadi.app
+   ```
+
+2. **Run the setup script**:
+   ```bash
+   source .env
+   ./scripts/setup-qstash.sh
+   ```
+
+3. **Test locally** (optional):
+   ```bash
+   bun run dev
+   # In another terminal:
+   source .env
+   ./scripts/test-cron.sh
+   ```
+
+That's it! QStash will now run your cron jobs automatically.
+
+---
+
 ## 🤖 How It Works
 
 ### AI-Powered Price Checking Cron (`/api/cron/check-prices-ai`)
