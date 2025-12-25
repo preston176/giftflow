@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ImageUpload } from "@/components/image-upload";
+import { CropImageDialog } from "@/components/crop-image-dialog";
 import { addGift, fetchProductInfo, analyzeProductScreenshot } from "@/actions/gift-actions";
 import { List } from "@/db/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -33,8 +34,10 @@ export function AddGiftDialog({ lists, currentListId }: AddGiftDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingInfo, setFetchingInfo] = useState(false);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string>("");
   const { toast } = useToast();
-  const urlTimeoutRef = useRef<NodeJS.Timeout>();
+  const urlTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -121,13 +124,16 @@ export function AddGiftDialog({ lists, currentListId }: AddGiftDialogProps) {
             ...prev,
             name: prev.name || result.name || prev.name,
             currentPrice: prev.currentPrice || (result.price ? result.price.toString() : prev.currentPrice),
-            imageUrl: prev.imageUrl || base64, // Use screenshot as product image
           }));
 
           toast({
             title: "Screenshot analyzed! 🎯",
             description: `Found: ${result.name || "product"}${result.price ? ` - $${result.price}` : ""}`,
           });
+
+          // Open crop dialog with the screenshot
+          setImageToCrop(base64);
+          setCropDialogOpen(true);
         } else {
           toast({
             title: "Could not analyze screenshot",
@@ -149,6 +155,19 @@ export function AddGiftDialog({ lists, currentListId }: AddGiftDialogProps) {
       });
       setFetchingInfo(false);
     }
+  };
+
+  const handleCropComplete = (croppedImage: string) => {
+    // Set the cropped image as the product image
+    setFormData(prev => ({
+      ...prev,
+      imageUrl: croppedImage,
+    }));
+
+    toast({
+      title: "Image cropped successfully!",
+      description: "Your product image is ready",
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -384,6 +403,14 @@ export function AddGiftDialog({ lists, currentListId }: AddGiftDialogProps) {
           </Button>
         </form>
       </DialogContent>
+
+      {/* Crop Image Dialog */}
+      <CropImageDialog
+        open={cropDialogOpen}
+        onOpenChange={setCropDialogOpen}
+        imageSrc={imageToCrop}
+        onCropComplete={handleCropComplete}
+      />
     </Dialog>
   );
 }
