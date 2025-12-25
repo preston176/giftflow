@@ -5,7 +5,12 @@
 
 set -e
 
-# TEMPORARY: Hardcoded values from .env (remove after setup)
+# Load from .env file or environment variables
+if [ -f .env ]; then
+  export $(cat .env | grep -v '^#' | xargs)
+fi
+
+# Use environment variables (set these in .env or export them)
 CRON_SECRET="${CRON_SECRET}"
 NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
 
