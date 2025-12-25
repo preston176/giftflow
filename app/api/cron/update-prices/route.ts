@@ -21,7 +21,7 @@ export async function POST(req: Request) {
         userEmail: profiles.email,
       })
       .from(gifts)
-      .innerJoin(profiles, eq(gifts.userId, profiles.userId))
+      .innerJoin(profiles, eq(gifts.userId, profiles.id))
       .where(not(isNull(gifts.url)))
       .limit(100);
 
