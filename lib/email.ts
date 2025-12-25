@@ -22,7 +22,7 @@ export async function sendPriceAlertEmail(data: PriceAlertEmailData) {
 
   try {
     const { error } = await resend.emails.send({
-      from: "GiftFlow <alerts@giftflow.app>",
+      from: "Zawadi <alerts@zawadi.app>",
       to: data.to,
       subject: `Price Drop Alert: ${data.giftName} is now ${data.newPrice}!`,
       html: `
@@ -73,7 +73,7 @@ export async function sendPriceAlertEmail(data: PriceAlertEmailData) {
               }
 
               <p style="font-size: 14px; color: #6b7280; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-                This is an automated alert from your GiftFlow wishlist. Prices are checked daily and you'll be notified when items drop below your target price.
+                This is an automated alert from your Zawadi wishlist. Prices are checked daily and you'll be notified when items drop below your target price.
               </p>
 
               <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
@@ -124,7 +124,7 @@ export async function sendDailySummaryEmail(data: DailySummaryEmailData) {
 
   try {
     const { error } = await resend.emails.send({
-      from: "GiftFlow <daily@giftflow.app>",
+      from: "Zawadi <daily@zawadi.app>",
       to: data.to,
       subject: `Daily Summary: ${data.priceDrops.length} price drop${data.priceDrops.length > 1 ? "s" : ""} on your wishlist`,
       html: `
@@ -173,6 +173,113 @@ export async function sendDailySummaryEmail(data: DailySummaryEmailData) {
                 <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="display: inline-block; background-color: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
                   View All Gifts
                 </a>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+interface WeeklyReminderEmailData {
+  to: string;
+  userName: string;
+  itemsToCheck: number;
+  giftsWithPrices: number;
+  potentialSavings: number;
+  bestDeal?: {
+    name: string;
+    savings: number;
+  };
+}
+
+export async function sendWeeklyReminderEmail(data: WeeklyReminderEmailData) {
+  if (!resend) {
+    console.warn("Resend not configured - skipping email");
+    return { success: false, error: "Email service not configured" };
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: "Zawadi <reminders@zawadi.app>",
+      to: data.to,
+      subject: `Weekly Reminder: ${data.itemsToCheck} items need price checks`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Weekly Price Check Reminder</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4;">
+            <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <h1 style="color: #10b981; margin: 0 0 20px 0; font-size: 24px;">📊 Weekly Price Check Reminder</h1>
+
+              <p style="font-size: 16px; margin-bottom: 20px;">Hi ${data.userName},</p>
+
+              <p style="font-size: 16px; margin-bottom: 20px;">
+                Just a friendly reminder to check prices on your wishlist items!
+              </p>
+
+              <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 20px; margin-bottom: 20px;">
+                <div style="margin-bottom: 10px;">
+                  <span style="font-size: 14px; color: #6b7280;">Items waiting for price check:</span>
+                  <span style="font-size: 24px; font-weight: bold; color: #10b981; margin-left: 10px;">${data.itemsToCheck}</span>
+                </div>
+                ${
+                  data.potentialSavings > 0
+                    ? `
+                  <div style="margin-bottom: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                    <span style="font-size: 14px; color: #6b7280;">Current potential savings:</span>
+                    <span style="font-size: 20px; font-weight: bold; color: #059669; margin-left: 10px;">$${data.potentialSavings.toFixed(2)}</span>
+                  </div>
+                  ${
+                    data.bestDeal
+                      ? `
+                    <div style="padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                      <span style="font-size: 14px; color: #059669;">🏆 Best deal: ${data.bestDeal.name} ($${data.bestDeal.savings.toFixed(2)} off)</span>
+                    </div>
+                  `
+                      : ""
+                  }
+                `
+                    : ""
+                }
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="display: inline-block; background-color: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                  Check Prices Now
+                </a>
+              </div>
+
+              <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                <p style="margin: 0; font-size: 14px; color: #065f46;">
+                  <strong>Pro tip:</strong> Click "Update Price" on each gift card to manually enter the current price or upload a screenshot for AI-powered extraction!
+                </p>
+              </div>
+
+              <p style="font-size: 14px; color: #6b7280; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                This is a weekly reminder from Zawadi. Keeping your prices updated helps you find the best deals and save money.
+              </p>
+
+              <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                <p style="font-size: 12px; color: #9ca3af; margin: 5px 0;">
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="color: #10b981; text-decoration: none;">Manage your wishlists</a>
+                </p>
               </div>
             </div>
           </body>
