@@ -11,15 +11,61 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const features = [
-  "Unlimited wishlists",
-  "Unlimited gifts",
-  "Automatic price tracking",
-  "Share with family & friends",
-  "Budget management",
-  "Multi-currency support",
-  "Price history charts",
-  "Email & QR code sharing",
+const pricingTiers = [
+  {
+    name: "Free",
+    price: "$0",
+    period: "forever",
+    description: "Perfect for getting started",
+    features: [
+      "Unlimited wishlists",
+      "Unlimited gifts",
+      "Manual price tracking",
+      "Share with family & friends",
+      "Budget management",
+      "Email sharing",
+    ],
+    cta: "Get Started Free",
+    ctaLink: "/sign-up",
+    popular: false,
+    comingSoon: false,
+  },
+  {
+    name: "Pro",
+    price: "$9.99",
+    period: "month",
+    description: "For power users who want automation",
+    features: [
+      "Everything in Free",
+      "Automatic price tracking",
+      "Price drop alerts",
+      "Price history charts",
+      "Multi-currency support",
+      "Priority support",
+      "Advanced analytics",
+    ],
+    cta: "Coming Soon",
+    popular: true,
+    comingSoon: true,
+  },
+  {
+    name: "Family",
+    price: "$19.99",
+    period: "month",
+    description: "Best for families coordinating gifts",
+    features: [
+      "Everything in Pro",
+      "Up to 5 family accounts",
+      "Shared budgets",
+      "Gift coordination",
+      "Duplicate prevention",
+      "Family calendar",
+      "Group chat",
+    ],
+    cta: "Coming Soon",
+    popular: false,
+    comingSoon: true,
+  },
 ];
 
 export function PricingSection() {
@@ -34,38 +80,77 @@ export function PricingSection() {
             Simple, transparent pricing
           </h2>
           <p className="text-lg text-muted-foreground">
-            Get started with all features completely free. No credit card required.
+            Get started free. Upgrade when you need more features.
           </p>
         </div>
 
-        <div className="max-w-md mx-auto">
-          <Card className="p-8 border-primary shadow-lg">
-            <CardHeader className="p-0 mb-6">
-              <CardTitle className="text-2xl mb-2">Free Forever</CardTitle>
-              <CardDescription>Everything you need to track gifts</CardDescription>
-              <div className="text-5xl font-bold my-6">
-                $0
-                <span className="text-lg text-muted-foreground font-normal"> / forever</span>
-              </div>
-            </CardHeader>
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {pricingTiers.map((tier) => (
+            <Card
+              key={tier.name}
+              className={`relative ${
+                tier.popular
+                  ? "border-primary shadow-xl scale-105"
+                  : tier.comingSoon
+                  ? "opacity-90"
+                  : ""
+              }`}
+            >
+              {tier.popular && (
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  Most Popular
+                </Badge>
+              )}
+              {tier.comingSoon && (
+                <Badge
+                  variant="secondary"
+                  className="absolute -top-3 left-1/2 -translate-x-1/2"
+                >
+                  Coming Soon
+                </Badge>
+              )}
 
-            <CardContent className="p-0 mb-6">
-              <ul className="space-y-3">
-                {features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2">
-                    <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
+              <CardHeader>
+                <CardTitle className="text-2xl">{tier.name}</CardTitle>
+                <CardDescription>{tier.description}</CardDescription>
+                <div className="text-4xl font-bold my-4">
+                  {tier.price}
+                  <span className="text-lg text-muted-foreground font-normal">
+                    {" "}
+                    / {tier.period}
+                  </span>
+                </div>
+              </CardHeader>
 
-            <CardFooter className="p-0">
-              <Button size="lg" className="w-full" asChild>
-                <Link href="/sign-up">Get Started Free</Link>
-              </Button>
-            </CardFooter>
-          </Card>
+              <CardContent>
+                <ul className="space-y-3">
+                  {tier.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2">
+                      <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+
+              <CardFooter>
+                {tier.comingSoon ? (
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    variant="outline"
+                    disabled
+                  >
+                    {tier.cta}
+                  </Button>
+                ) : (
+                  <Button size="lg" className="w-full" asChild>
+                    <Link href={tier.ctaLink!}>{tier.cta}</Link>
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          ))}
         </div>
       </div>
     </section>
