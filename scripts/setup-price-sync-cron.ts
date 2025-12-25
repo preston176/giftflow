@@ -4,7 +4,7 @@
  */
 
 const QSTASH_URL = "https://qstash.upstash.io/v2/schedules";
-const QSTASH_TOKEN = process.env.QSTASH_TOKEN;
+let QSTASH_TOKEN = process.env.QSTASH_TOKEN;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 const CRON_SECRET = process.env.CRON_SECRET;
 
@@ -12,6 +12,9 @@ if (!QSTASH_TOKEN) {
   console.error("❌ QSTASH_TOKEN not found in environment");
   process.exit(1);
 }
+
+// Remove quotes if they exist (from .env parsing)
+QSTASH_TOKEN = QSTASH_TOKEN.replace(/^["']|["']$/g, '');
 
 if (!APP_URL) {
   console.error("❌ NEXT_PUBLIC_APP_URL not found in environment");
@@ -25,6 +28,7 @@ if (!CRON_SECRET) {
 
 async function setupCron() {
   console.log("🚀 Setting up QStash cron job for price syncing...");
+  console.log(`🔑 Token (first 20 chars): ${QSTASH_TOKEN.substring(0, 20)}...`);
 
   const destinationUrl = `${APP_URL}/api/cron/update-prices`;
   console.log(`📍 Target URL: ${destinationUrl}`);
@@ -33,8 +37,10 @@ async function setupCron() {
   const payload = {
     destination: destinationUrl,
     cron: "0 6 * * *", // Daily at 6am UTC
+    body: JSON.stringify({ test: true }), // Required by QStash
     headers: {
       Authorization: `Bearer ${CRON_SECRET}`,
+      "Content-Type": "application/json",
     },
     retries: 3,
   };
