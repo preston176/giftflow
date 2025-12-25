@@ -22,7 +22,7 @@ export async function sendPriceAlertEmail(data: PriceAlertEmailData) {
 
   try {
     const { error } = await resend.emails.send({
-      from: "Zawadi <alerts@zawadi.app>",
+      from: "Zawadi <noreply@noreply.prestonmayieka.com>",
       to: data.to,
       subject: `Price Drop Alert: ${data.giftName} is now ${data.newPrice}!`,
       html: `
@@ -124,7 +124,7 @@ export async function sendDailySummaryEmail(data: DailySummaryEmailData) {
 
   try {
     const { error } = await resend.emails.send({
-      from: "Zawadi <daily@zawadi.app>",
+      from: "Zawadi <noreply@noreply.prestonmayieka.com>",
       to: data.to,
       subject: `Daily Summary: ${data.priceDrops.length} price drop${data.priceDrops.length > 1 ? "s" : ""} on your wishlist`,
       html: `
@@ -213,7 +213,7 @@ export async function sendWeeklyReminderEmail(data: WeeklyReminderEmailData) {
 
   try {
     const { error } = await resend.emails.send({
-      from: "Zawadi <reminders@zawadi.app>",
+      from: "Zawadi <noreply@noreply.prestonmayieka.com>",
       to: data.to,
       subject: `Weekly Reminder: ${data.itemsToCheck} items need price checks`,
       html: `

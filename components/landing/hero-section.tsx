@@ -33,7 +33,7 @@ export function HeroSection() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" asChild className="w-full sm:w-auto">
-              <Link href="/sign-up">Start Free</Link>
+              <Link href="/dashboard">Start Free</Link>
             </Button>
             <Button size="lg" variant="outline" onClick={scrollToFeatures} className="w-full sm:w-auto">
               See How It Works

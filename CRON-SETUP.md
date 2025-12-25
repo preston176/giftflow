@@ -448,9 +448,11 @@ curl -X GET "http://localhost:3000/api/cron/check-prices-ai" \
 4. Use verified `from` addresses
 
 ### From Addresses
-- Price alerts: `alerts@zawadi.app`
-- Weekly reminders: `reminders@zawadi.app`
-- Daily summaries: `daily@zawadi.app`
+All emails sent from: `noreply@prestonmayieka.com`
+- Price alerts
+- Weekly reminders
+- Daily summaries
+- Share invitations
 
 ### Monitoring
 - Check Resend dashboard for bounce rates

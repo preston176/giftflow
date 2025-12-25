@@ -211,7 +211,7 @@ export async function shareListByEmail(listId: string, email: string) {
     const listDesc = list.description || "";
 
     await resend.emails.send({
-      from: "Zawadi <noreply@zawadi.app>",
+      from: "Zawadi <noreply@noreply.prestonmayieka.com>",
       to: email,
       subject: `${senderName} shared a gift list with you on Zawadi`,
       html: `
