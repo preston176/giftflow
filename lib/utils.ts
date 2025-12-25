@@ -5,12 +5,32 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: string | number): string {
+export function formatCurrency(amount: string | number, currencyCode?: string): string {
+  // Get currency from parameter, localStorage, or default to USD
+  let currency = currencyCode;
+
+  if (!currency && typeof window !== "undefined") {
+    currency = localStorage.getItem("preferred-currency") || "USD";
+  }
+
+  if (!currency) {
+    currency = "USD";
+  }
+
   const num = typeof amount === "string" ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(num);
+
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+    }).format(num);
+  } catch (error) {
+    // Fallback if currency code is invalid
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(num);
+  }
 }
 
 export function calculateSavings(

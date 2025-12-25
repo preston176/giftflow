@@ -14,6 +14,7 @@ import { List, Gift } from "@/db/schema";
 interface DashboardContentProps {
   profile: {
     name: string | null;
+    currency: string;
   };
   lists: List[];
   initialListId?: string;
@@ -50,7 +51,7 @@ export function DashboardContent({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
-      <Header listId={currentListId} listName={currentList?.name} />
+      <Header listId={currentListId} listName={currentList?.name} currency={profile.currency} />
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold mb-2">

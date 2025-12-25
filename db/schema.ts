@@ -17,6 +17,8 @@ export const profiles = pgTable("profiles", {
   email: text("email").notNull(),
   name: text("name"),
   imageUrl: text("image_url"),
+  totalBudget: decimal("total_budget", { precision: 10, scale: 2 }).default("0"),
+  currency: text("currency").default("USD").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

@@ -31,7 +31,6 @@ export async function ensureProfile() {
       email: user.emailAddresses[0]?.emailAddress || "",
       name: user.fullName || user.firstName || "User",
       imageUrl: user.imageUrl,
-      totalBudget: "0",
     })
     .returning();
 
