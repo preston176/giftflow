@@ -34,10 +34,6 @@ export interface SeasonalThemeConfig {
   displayName: string;
   light: ThemeColors;
   dark: ThemeColors;
-  particles?: {
-    emoji?: string[];
-    count?: number;
-  };
 }
 
 /**
@@ -129,10 +125,6 @@ export const SEASONAL_THEMES: Record<SeasonalTheme, SeasonalThemeConfig> = {
     displayName: "Christmas",
     light: WINTER_ELEGANCE_LIGHT,
     dark: WINTER_ELEGANCE_DARK,
-    particles: {
-      emoji: ["❄️", "🎄", "⭐", "🎁", "☃️"],
-      count: 20,
-    },
   },
 
   "new-year": {
@@ -140,10 +132,6 @@ export const SEASONAL_THEMES: Record<SeasonalTheme, SeasonalThemeConfig> = {
     displayName: "New Year",
     light: WINTER_ELEGANCE_LIGHT,
     dark: WINTER_ELEGANCE_DARK,
-    particles: {
-      emoji: ["🎊", "🎉", "✨", "🎆", "🥳"],
-      count: 25,
-    },
   },
 
   halloween: {
@@ -151,10 +139,6 @@ export const SEASONAL_THEMES: Record<SeasonalTheme, SeasonalThemeConfig> = {
     displayName: "Halloween",
     light: WINTER_ELEGANCE_LIGHT,
     dark: WINTER_ELEGANCE_DARK,
-    particles: {
-      emoji: ["🎃", "👻", "🦇", "🕷️", "🕸️"],
-      count: 15,
-    },
   },
 
   valentines: {
@@ -162,10 +146,6 @@ export const SEASONAL_THEMES: Record<SeasonalTheme, SeasonalThemeConfig> = {
     displayName: "Valentine's Day",
     light: WINTER_ELEGANCE_LIGHT,
     dark: WINTER_ELEGANCE_DARK,
-    particles: {
-      emoji: ["💕", "💖", "💝", "💗", "❤️"],
-      count: 18,
-    },
   },
 
   spring: {
@@ -173,10 +153,6 @@ export const SEASONAL_THEMES: Record<SeasonalTheme, SeasonalThemeConfig> = {
     displayName: "Spring",
     light: WINTER_ELEGANCE_LIGHT,
     dark: WINTER_ELEGANCE_DARK,
-    particles: {
-      emoji: ["🌸", "🌺", "🌼", "🦋", "🌷"],
-      count: 12,
-    },
   },
 
   summer: {
@@ -184,10 +160,6 @@ export const SEASONAL_THEMES: Record<SeasonalTheme, SeasonalThemeConfig> = {
     displayName: "Summer",
     light: WINTER_ELEGANCE_LIGHT,
     dark: WINTER_ELEGANCE_DARK,
-    particles: {
-      emoji: ["☀️", "🌊", "🏖️", "🌴", "🍹"],
-      count: 10,
-    },
   },
 
   fall: {
@@ -195,10 +167,6 @@ export const SEASONAL_THEMES: Record<SeasonalTheme, SeasonalThemeConfig> = {
     displayName: "Fall",
     light: WINTER_ELEGANCE_LIGHT,
     dark: WINTER_ELEGANCE_DARK,
-    particles: {
-      emoji: ["🍂", "🍁", "🎃", "🌰", "🦃"],
-      count: 15,
-    },
   },
 
   winter: {
@@ -206,10 +174,6 @@ export const SEASONAL_THEMES: Record<SeasonalTheme, SeasonalThemeConfig> = {
     displayName: "Winter",
     light: WINTER_ELEGANCE_LIGHT,
     dark: WINTER_ELEGANCE_DARK,
-    particles: {
-      emoji: ["❄️", "⛄", "🌨️", "☃️", "🧊"],
-      count: 18,
-    },
   },
 };
 
