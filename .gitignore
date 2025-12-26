@@ -35,3 +35,6 @@ next-env.d.ts
 
 #  code
 .
+
+# marketing materials (internal use only)
+REDDIT_POSTS.md
