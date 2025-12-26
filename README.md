@@ -18,11 +18,13 @@ PriceFlow solves the practical problem of fragmented shopping workflows by centr
 
 ---
 
-## Screenshots
-
-### Demo Video
+## Demo Video
 
 [![Demo Video](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://youtu.be/VIDEO_ID)
+
+---
+
+## Screenshots
 
 ### Dashboard Overview
 
@@ -34,10 +36,10 @@ _Main dashboard with budget tracking and gift management_
 ![AI Features](./docs/screenshots/ai-features.png)
 _Screenshot upload with automatic product detection and image cropping_
 
-### Seasonal Themes
+### Price Tracking & Alerts
 
-![Seasonal Themes](./docs/screenshots/seasonal-themes.png)
-_Dynamic theming that changes with holidays (Christmas, Halloween, Valentine's, etc.)_
+![Price Tracking](./docs/screenshots/price-tracking.png)
+_Real-time price monitoring with email alerts when prices drop below target_
 
 ### Multi-Currency Support
 
@@ -48,6 +50,11 @@ _Support for 20+ global currencies with auto-detection_
 
 ![Email Sharing](./docs/screenshots/sharing.png)
 _Share lists via email or shareable links_
+
+### Landing Page
+
+![Landing Page](./docs/screenshots/landing-page.png)
+_Modern landing page with Winter Elegance theme and video demo section_
 
 ---
 
