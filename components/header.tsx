@@ -47,7 +47,7 @@ export function Header({
               <ShareDialog listId={listId} listName={listName} />
             </>
           )}
-          <UserButton afterSignOutUrl="/sign-in" />
+          <UserButton afterSignOutUrl="/" />
         </div>
       </div>
     </header>

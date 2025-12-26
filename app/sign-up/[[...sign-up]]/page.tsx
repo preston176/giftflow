@@ -1,9 +1,5 @@
-import { SignUp } from "@clerk/nextjs";
+import { CustomSignUp } from "@/components/auth/custom-sign-up";
 
 export default function SignUpPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20">
-      <SignUp />
-    </div>
-  );
+  return <CustomSignUp />;
 }

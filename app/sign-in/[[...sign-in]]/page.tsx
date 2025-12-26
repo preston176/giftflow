@@ -1,9 +1,5 @@
-import { SignIn } from "@clerk/nextjs";
+import { CustomSignIn } from "@/components/auth/custom-sign-in";
 
 export default function SignInPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20">
-      <SignIn />
-    </div>
-  );
+  return <CustomSignIn />;
 }
