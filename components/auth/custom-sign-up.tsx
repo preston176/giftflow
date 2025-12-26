@@ -97,25 +97,22 @@ export function CustomSignUp() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden p-4">
-      {/* Glass Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-slate-50/30 to-slate-100/40 dark:from-blue-950/20 dark:via-slate-950/20 dark:to-slate-900/20" />
-
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden p-4 bg-neutral-950">
       {/* Animated Orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-slate-500/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-slate-500/20 to-slate-600/20 rounded-full blur-3xl animate-pulse delay-1000" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-600/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-slate-700/20 rounded-full blur-3xl animate-pulse delay-1000" />
 
       {/* Sign Up Card */}
       <div className="relative z-10 w-full max-w-md">
-        <div className="backdrop-blur-xl bg-white/40 dark:bg-black/20 rounded-3xl border border-white/20 dark:border-white/10 shadow-2xl p-8 md:p-10">
+        <div className="backdrop-blur-xl bg-slate-900/50 rounded-3xl border border-slate-800 shadow-2xl p-8 md:p-10">
           {!pendingVerification ? (
             <>
               {/* Header */}
               <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-slate-700 to-slate-800 dark:from-blue-400 dark:via-slate-500 dark:to-slate-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold mb-2 text-white">
                   Create Account
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-slate-400">
                   Start tracking prices smarter
                 </p>
               </div>
@@ -125,7 +122,7 @@ export function CustomSignUp() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full backdrop-blur-md bg-white/60 dark:bg-black/40 border-white/20 dark:border-white/10 hover:bg-white/80 dark:hover:bg-black/60"
+                  className="w-full backdrop-blur-md bg-slate-900/50 border-slate-800 hover:bg-slate-900/80 hover:border-teal-600/50 text-white"
                   onClick={() => handleOAuthSignUp("oauth_google")}
                 >
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -140,7 +137,7 @@ export function CustomSignUp() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full backdrop-blur-md bg-white/60 dark:bg-black/40 border-white/20 dark:border-white/10 hover:bg-white/80 dark:hover:bg-black/60"
+                  className="w-full backdrop-blur-md bg-slate-900/50 border-slate-800 hover:bg-slate-900/80 hover:border-teal-600/50 text-white"
                   onClick={() => handleOAuthSignUp("oauth_github")}
                 >
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -153,10 +150,10 @@ export function CustomSignUp() {
               {/* Divider */}
               <div className="relative mb-6">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+                  <div className="w-full border-t border-slate-800"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 backdrop-blur-md bg-white/60 dark:bg-black/40 text-gray-600 dark:text-gray-400 rounded-full">
+                  <span className="px-4 backdrop-blur-md bg-slate-900/50 text-slate-400 rounded-full">
                     Or continue with email
                   </span>
                 </div>
@@ -164,8 +161,8 @@ export function CustomSignUp() {
 
               {/* Error Message */}
               {error && (
-                <div className="mb-4 p-3 rounded-lg backdrop-blur-md bg-red-50/60 dark:bg-red-900/20 border border-red-200/50 dark:border-red-800/50">
-                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                <div className="mb-4 p-3 rounded-lg backdrop-blur-md bg-red-900/20 border border-red-800/50">
+                  <p className="text-sm text-red-400">{error}</p>
                 </div>
               )}
 
@@ -173,11 +170,11 @@ export function CustomSignUp() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName" className="text-gray-700 dark:text-gray-300">
+                    <Label htmlFor="firstName" className="text-slate-300">
                       First Name
                     </Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                       <Input
                         id="firstName"
                         type="text"
@@ -185,13 +182,13 @@ export function CustomSignUp() {
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                         required
-                        className="pl-10 backdrop-blur-md bg-white/60 dark:bg-black/40 border-white/20 dark:border-white/10"
+                        className="pl-10 backdrop-blur-md bg-slate-900/50 border-slate-800 text-white placeholder:text-slate-500"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-gray-700 dark:text-gray-300">
+                    <Label htmlFor="lastName" className="text-slate-300">
                       Last Name
                     </Label>
                     <Input
@@ -201,17 +198,17 @@ export function CustomSignUp() {
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       required
-                      className="backdrop-blur-md bg-white/60 dark:bg-black/40 border-white/20 dark:border-white/10"
+                      className="backdrop-blur-md bg-slate-900/50 border-slate-800 text-white placeholder:text-slate-500"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
+                  <Label htmlFor="email" className="text-slate-300">
                     Email
                   </Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <Input
                       id="email"
                       type="email"
@@ -219,17 +216,17 @@ export function CustomSignUp() {
                       value={emailAddress}
                       onChange={(e) => setEmailAddress(e.target.value)}
                       required
-                      className="pl-10 backdrop-blur-md bg-white/60 dark:bg-black/40 border-white/20 dark:border-white/10"
+                      className="pl-10 backdrop-blur-md bg-slate-900/50 border-slate-800 text-white placeholder:text-slate-500"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-gray-700 dark:text-gray-300">
+                  <Label htmlFor="password" className="text-slate-300">
                     Password
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <Input
                       id="password"
                       type="password"
@@ -238,10 +235,10 @@ export function CustomSignUp() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       minLength={8}
-                      className="pl-10 backdrop-blur-md bg-white/60 dark:bg-black/40 border-white/20 dark:border-white/10"
+                      className="pl-10 backdrop-blur-md bg-slate-900/50 border-slate-800 text-white placeholder:text-slate-500"
                     />
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-slate-500">
                     Must be at least 8 characters
                   </p>
                 </div>
@@ -249,7 +246,7 @@ export function CustomSignUp() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-slate-700 hover:from-blue-700 hover:to-slate-800 shadow-lg shadow-blue-500/50 dark:shadow-blue-500/30"
+                  className="w-full bg-teal-600 hover:bg-teal-500 shadow-lg shadow-teal-900/40"
                 >
                   {isLoading ? (
                     <>
@@ -267,11 +264,11 @@ export function CustomSignUp() {
 
               {/* Sign In Link */}
               <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-slate-400">
                   Already have an account?{" "}
                   <Link
                     href="/sign-in"
-                    className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
+                    className="text-teal-400 font-medium hover:underline"
                   >
                     Sign in
                   </Link>
@@ -282,31 +279,31 @@ export function CustomSignUp() {
             <>
               {/* Email Verification */}
               <div className="text-center mb-8">
-                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500/20 to-slate-600/20 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm border border-white/20 dark:border-white/10">
-                  <Mail className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                <div className="mx-auto w-16 h-16 bg-teal-600/10 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm border border-slate-800">
+                  <Mail className="h-8 w-8 text-teal-400" />
                 </div>
-                <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-slate-700 to-slate-800 dark:from-blue-400 dark:via-slate-500 dark:to-slate-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold mb-2 text-white">
                   Verify Your Email
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-slate-400">
                   We sent a verification code to
                 </p>
-                <p className="text-gray-900 dark:text-gray-100 font-medium mt-1">
+                <p className="text-white font-medium mt-1">
                   {emailAddress}
                 </p>
               </div>
 
               {/* Error Message */}
               {error && (
-                <div className="mb-4 p-3 rounded-lg backdrop-blur-md bg-red-50/60 dark:bg-red-900/20 border border-red-200/50 dark:border-red-800/50">
-                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                <div className="mb-4 p-3 rounded-lg backdrop-blur-md bg-red-900/20 border border-red-800/50">
+                  <p className="text-sm text-red-400">{error}</p>
                 </div>
               )}
 
               {/* Verification Form */}
               <form onSubmit={handleVerify} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="code" className="text-gray-700 dark:text-gray-300">
+                  <Label htmlFor="code" className="text-slate-300">
                     Verification Code
                   </Label>
                   <Input
@@ -317,14 +314,14 @@ export function CustomSignUp() {
                     onChange={(e) => setCode(e.target.value)}
                     required
                     maxLength={6}
-                    className="text-center text-2xl tracking-widest backdrop-blur-md bg-white/60 dark:bg-black/40 border-white/20 dark:border-white/10"
+                    className="text-center text-2xl tracking-widest backdrop-blur-md bg-slate-900/50 border-slate-800 text-white placeholder:text-slate-500"
                   />
                 </div>
 
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-slate-700 hover:from-blue-700 hover:to-slate-800 shadow-lg shadow-blue-500/50 dark:shadow-blue-500/30"
+                  className="w-full bg-teal-600 hover:bg-teal-500 shadow-lg shadow-teal-900/40"
                 >
                   {isLoading ? (
                     <>
@@ -345,7 +342,7 @@ export function CustomSignUp() {
                 <button
                   type="button"
                   onClick={() => signUp?.prepareEmailAddressVerification({ strategy: "email_code" })}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-sm text-teal-400 hover:underline"
                 >
                   Didn't receive the code? Resend
                 </button>
@@ -358,7 +355,7 @@ export function CustomSignUp() {
         <div className="mt-4 text-center">
           <Link
             href="/"
-            className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+            className="text-sm text-slate-400 hover:text-slate-200"
           >
             ← Back to home
           </Link>
