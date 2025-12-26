@@ -57,6 +57,10 @@ export const gifts = pgTable("gifts", {
   lastPriceCheck: timestamp("last_price_check"),
   lowestPriceEver: decimal("lowest_price_ever", { precision: 10, scale: 2 }),
   highestPriceEver: decimal("highest_price_ever", { precision: 10, scale: 2 }),
+  // Cross-marketplace fields
+  primaryMarketplace: text("primary_marketplace"),
+  autoSelectBestPrice: boolean("auto_select_best_price").default(true).notNull(),
+  lastMarketplaceSync: timestamp("last_marketplace_sync"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -69,6 +73,47 @@ export const priceHistory = pgTable("price_history", {
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   source: text("source"),
   checkedAt: timestamp("checked_at").defaultNow().notNull(),
+});
+
+export const marketplaceProducts = pgTable("marketplace_products", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  giftId: uuid("gift_id")
+    .notNull()
+    .references(() => gifts.id, { onDelete: "cascade" }),
+  marketplace: text("marketplace").notNull(), // 'amazon', 'walmart', 'target', 'bestbuy'
+  productUrl: text("product_url").notNull(),
+  productName: text("product_name"),
+  productImageUrl: text("product_image_url"),
+  currentPrice: decimal("current_price", { precision: 10, scale: 2 }),
+  lastPriceCheck: timestamp("last_price_check"),
+  inStock: boolean("in_stock").default(true).notNull(),
+  confidenceScore: decimal("confidence_score", { precision: 3, scale: 2 }),
+  metadata: text("metadata"), // JSON string for additional data
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const marketplaceSearchCache = pgTable("marketplace_search_cache", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  searchQuery: text("search_query").notNull(),
+  marketplace: text("marketplace").notNull(),
+  results: text("results").notNull(), // JSON string
+  resultCount: decimal("result_count", { precision: 10, scale: 0 }).default("0"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
+export const productMatchHistory = pgTable("product_match_history", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  giftId: uuid("gift_id")
+    .notNull()
+    .references(() => gifts.id, { onDelete: "cascade" }),
+  marketplace: text("marketplace").notNull(),
+  productUrl: text("product_url").notNull(),
+  matchConfidence: decimal("match_confidence", { precision: 3, scale: 2 }).notNull(),
+  matchDecision: text("match_decision").notNull(), // 'accepted', 'rejected', 'manual'
+  aiReasoning: text("ai_reasoning"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const shareTokens = pgTable("share_tokens", {
@@ -118,6 +163,8 @@ export const giftsRelations = relations(gifts, ({ one, many }) => ({
     references: [lists.id],
   }),
   priceHistory: many(priceHistory),
+  marketplaceProducts: many(marketplaceProducts),
+  productMatchHistory: many(productMatchHistory),
 }));
 
 export const priceHistoryRelations = relations(priceHistory, ({ one }) => ({
@@ -145,6 +192,20 @@ export const listCollaboratorsRelations = relations(listCollaborators, ({ one })
   }),
 }));
 
+export const marketplaceProductsRelations = relations(marketplaceProducts, ({ one }) => ({
+  gift: one(gifts, {
+    fields: [marketplaceProducts.giftId],
+    references: [gifts.id],
+  }),
+}));
+
+export const productMatchHistoryRelations = relations(productMatchHistory, ({ one }) => ({
+  gift: one(gifts, {
+    fields: [productMatchHistory.giftId],
+    references: [gifts.id],
+  }),
+}));
+
 export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
 export type List = typeof lists.$inferSelect;
@@ -157,3 +218,9 @@ export type PriceHistory = typeof priceHistory.$inferSelect;
 export type NewPriceHistory = typeof priceHistory.$inferInsert;
 export type ListCollaborator = typeof listCollaborators.$inferSelect;
 export type NewListCollaborator = typeof listCollaborators.$inferInsert;
+export type MarketplaceProduct = typeof marketplaceProducts.$inferSelect;
+export type NewMarketplaceProduct = typeof marketplaceProducts.$inferInsert;
+export type MarketplaceSearchCache = typeof marketplaceSearchCache.$inferSelect;
+export type NewMarketplaceSearchCache = typeof marketplaceSearchCache.$inferInsert;
+export type ProductMatchHistory = typeof productMatchHistory.$inferSelect;
+export type NewProductMatchHistory = typeof productMatchHistory.$inferInsert;

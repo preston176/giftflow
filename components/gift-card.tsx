@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { ExternalLink, Trash2, TrendingDown, TrendingUp, BarChart3, Bell, BellOff, Loader2 } from "lucide-react";
+import { ExternalLink, Trash2, TrendingDown, TrendingUp, BarChart3, Bell, BellOff, Loader2, Store, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -15,9 +16,11 @@ import {
 import { formatCurrency, calculateSavings } from "@/lib/utils";
 import { togglePurchased, deleteGift } from "@/actions/gift-actions";
 import { togglePriceTracking, checkPriceNow } from "@/actions/price-actions";
+import { getMarketplaceProducts } from "@/actions/marketplace-actions";
 import { PriceHistoryChart } from "@/components/price-history-chart";
 import { UpdatePriceDialog } from "@/components/update-price-dialog";
-import { Gift } from "@/db/schema";
+import { MarketplaceComparison } from "@/components/marketplace-comparison";
+import { Gift, MarketplaceProduct } from "@/db/schema";
 import { useToast } from "@/hooks/use-toast";
 
 interface GiftCardProps {
@@ -26,10 +29,34 @@ interface GiftCardProps {
 
 export function GiftCard({ gift }: GiftCardProps) {
   const [showPriceHistory, setShowPriceHistory] = useState(false);
+  const [showMarketplaces, setShowMarketplaces] = useState(false);
   const [isCheckingPrice, setIsCheckingPrice] = useState(false);
+  const [marketplaceProducts, setMarketplaceProducts] = useState<MarketplaceProduct[]>([]);
+  const [loadingMarketplaces, setLoadingMarketplaces] = useState(false);
   const { toast } = useToast();
   const savings = calculateSavings(gift.targetPrice, gift.currentPrice);
   const hasSavings = savings !== null && savings > 0;
+
+  // Load marketplace products when component mounts or when showing marketplaces
+  useEffect(() => {
+    if (showMarketplaces && marketplaceProducts.length === 0) {
+      loadMarketplaceProducts();
+    }
+  }, [showMarketplaces]);
+
+  const loadMarketplaceProducts = async () => {
+    setLoadingMarketplaces(true);
+    try {
+      const result = await getMarketplaceProducts(gift.id);
+      if (result.success) {
+        setMarketplaceProducts(result.products);
+      }
+    } catch (error) {
+      console.error("Failed to load marketplace products:", error);
+    } finally {
+      setLoadingMarketplaces(false);
+    }
+  };
 
   const handleTogglePurchased = async () => {
     try {
@@ -184,6 +211,58 @@ export function GiftCard({ gift }: GiftCardProps) {
           <p className="text-xs text-muted-foreground line-clamp-2">
             {gift.notes}
           </p>
+        )}
+
+        {/* Marketplace comparison toggle */}
+        {(gift.primaryMarketplace || showMarketplaces) && (
+          <div className="mt-3 pt-3 border-t">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-between"
+              onClick={() => setShowMarketplaces(!showMarketplaces)}
+            >
+              <div className="flex items-center gap-2">
+                <Store className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  {marketplaceProducts.length > 0
+                    ? `${marketplaceProducts.length} Marketplace${marketplaceProducts.length !== 1 ? 's' : ''}`
+                    : "View Marketplaces"}
+                </span>
+                {gift.primaryMarketplace && (
+                  <Badge variant="secondary" className="text-xs">
+                    {gift.primaryMarketplace}
+                  </Badge>
+                )}
+              </div>
+              {showMarketplaces ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+
+            {/* Marketplace comparison view */}
+            {showMarketplaces && (
+              <div className="mt-3">
+                {loadingMarketplaces ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : marketplaceProducts.length > 0 ? (
+                  <MarketplaceComparison
+                    giftId={gift.id}
+                    products={marketplaceProducts}
+                    currentPrimaryMarketplace={gift.primaryMarketplace}
+                  />
+                ) : (
+                  <div className="text-center py-4 text-sm text-muted-foreground">
+                    No marketplace products tracked yet
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </CardContent>
       <CardFooter className="p-4 pt-0 flex flex-col gap-2">
