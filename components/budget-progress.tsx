@@ -18,11 +18,13 @@ import { updateBudget } from "@/actions/profile-actions";
 import { DollarSign, Edit } from "lucide-react";
 
 interface BudgetProgressProps {
+  listId: string;
   totalBudget: string;
   totalSpent: number;
+  currency?: string;
 }
 
-export function BudgetProgress({ totalBudget, totalSpent }: BudgetProgressProps) {
+export function BudgetProgress({ listId, totalBudget, totalSpent, currency = "USD" }: BudgetProgressProps) {
   const [open, setOpen] = useState(false);
   const [newBudget, setNewBudget] = useState(totalBudget);
   const [loading, setLoading] = useState(false);
@@ -33,8 +35,9 @@ export function BudgetProgress({ totalBudget, totalSpent }: BudgetProgressProps)
   const handleUpdateBudget = async () => {
     setLoading(true);
     try {
-      await updateBudget(newBudget);
+      await updateBudget(listId, newBudget);
       setOpen(false);
+      window.location.reload(); // Refresh to show updated budget
     } catch (error) {
       console.error("Failed to update budget:", error);
     } finally {
@@ -87,12 +90,12 @@ export function BudgetProgress({ totalBudget, totalSpent }: BudgetProgressProps)
       <CardContent className="space-y-4">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Spent</span>
-          <span className="font-semibold">{formatCurrency(totalSpent)}</span>
+          <span className="font-semibold">{formatCurrency(totalSpent, currency)}</span>
         </div>
         <Progress value={Math.min(percentage, 100)} className="h-3" />
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Budget</span>
-          <span className="font-semibold">{formatCurrency(budget)}</span>
+          <span className="font-semibold">{formatCurrency(budget, currency)}</span>
         </div>
         {budget > 0 && (
           <div className="text-center pt-2">
@@ -102,8 +105,8 @@ export function BudgetProgress({ totalBudget, totalSpent }: BudgetProgressProps)
               }`}
             >
               {totalSpent > budget
-                ? `${formatCurrency(totalSpent - budget)} over budget`
-                : `${formatCurrency(budget - totalSpent)} remaining`}
+                ? `${formatCurrency(totalSpent - budget, currency)} over budget`
+                : `${formatCurrency(budget - totalSpent, currency)} remaining`}
             </span>
           </div>
         )}

@@ -37,7 +37,7 @@ export async function ensureProfile() {
   return newProfile;
 }
 
-export async function updateBudget(budget: string) {
+export async function updateBudget(listId: string, budget: string) {
   const { userId } = await auth();
 
   if (!userId) {
@@ -54,13 +54,17 @@ export async function updateBudget(budget: string) {
     throw new Error("Profile not found");
   }
 
+  // Import lists table
+  const { lists } = await import("@/db/schema");
+
+  // Update the list's budget
   await db
-    .update(profiles)
+    .update(lists)
     .set({
-      totalBudget: budget,
+      budget: budget,
       updatedAt: new Date(),
     })
-    .where(eq(profiles.id, profile.id));
+    .where(eq(lists.id, listId));
 
   revalidatePath("/dashboard");
 }
