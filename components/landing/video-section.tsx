@@ -1,5 +1,7 @@
 "use client";
 
+import CountUp from "react-countup";
+
 export default function VideoSection() {
   return (
     <section id="how-it-works" className="py-24 bg-neutral-900 text-white">
@@ -29,15 +31,21 @@ export default function VideoSection() {
         {/* Optional: Video Features */}
         <div className="mt-12 grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
           <div className="text-center">
-            <div className="text-2xl font-bold text-teal-400 mb-1">2 min</div>
+            <div className="text-2xl font-bold text-teal-400 mb-1">
+              <CountUp end={2} duration={1.5} enableScrollSpy scrollSpyOnce /> min
+            </div>
             <div className="text-sm text-slate-400">Quick walkthrough</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-teal-400 mb-1">3 Steps</div>
+            <div className="text-2xl font-bold text-teal-400 mb-1">
+              <CountUp end={3} duration={1.5} enableScrollSpy scrollSpyOnce /> Steps
+            </div>
             <div className="text-sm text-slate-400">To start saving</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-teal-400 mb-1">0 Cost</div>
+            <div className="text-2xl font-bold text-teal-400 mb-1">
+              <CountUp end={0} duration={1.5} enableScrollSpy scrollSpyOnce /> Cost
+            </div>
             <div className="text-sm text-slate-400">Free forever</div>
           </div>
         </div>

@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronLeft, Target, Shield, Zap, Heart } from "lucide-react";
+import CountUp from "react-countup";
 
 export default function AboutPage() {
   return (
@@ -86,7 +89,9 @@ export default function AboutPage() {
           <h2 className="text-2xl font-bold mb-8 text-center">By The Numbers</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="text-3xl font-bold text-teal-400 mb-1">4</div>
+              <div className="text-3xl font-bold text-teal-400 mb-1">
+                <CountUp end={4} duration={2} enableScrollSpy scrollSpyOnce />
+              </div>
               <div className="text-sm text-slate-400">Major Retailers</div>
             </div>
             <div className="text-center">
@@ -94,7 +99,9 @@ export default function AboutPage() {
               <div className="text-sm text-slate-400">Price Monitoring</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-teal-400 mb-1">$247</div>
+              <div className="text-3xl font-bold text-teal-400 mb-1">
+                $<CountUp end={247} duration={2.5} enableScrollSpy scrollSpyOnce />
+              </div>
               <div className="text-sm text-slate-400">Avg. Yearly Savings</div>
             </div>
             <div className="text-center">

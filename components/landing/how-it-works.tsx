@@ -1,3 +1,7 @@
+"use client";
+
+import CountUp from "react-countup";
+
 const steps = [
   {
     number: "01",
@@ -62,7 +66,10 @@ export default function HowItWorks() {
         <div className="mt-16 text-center">
           <div className="inline-flex items-center gap-2 px-6 py-3 bg-teal-950/30 border border-teal-800/50 rounded-full backdrop-blur-sm">
             <span className="text-slate-300">
-              Average savings: <span className="font-semibold text-teal-400">$247/year</span>
+              Average savings:{" "}
+              <span className="font-semibold text-teal-400">
+                $<CountUp end={247} duration={2.5} enableScrollSpy scrollSpyOnce />/year
+              </span>
             </span>
           </div>
         </div>
