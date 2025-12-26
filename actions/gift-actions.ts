@@ -331,26 +331,33 @@ export async function autoUpdatePrice(giftId: string) {
       throw new Error("App URL not configured");
     }
 
-    const response = await fetch(`${baseUrl}/api/price-update-background`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ giftId }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to start background price update");
+    if (!process.env.QSTASH_TOKEN) {
+      throw new Error("QStash not configured");
     }
 
-    const data = await response.json();
+    // Call QStash directly from server action
+    const { Client } = await import("@upstash/qstash");
+    const qstash = new Client({
+      token: process.env.QSTASH_TOKEN,
+    });
+
+    const result = await qstash.publishJSON({
+      url: `${baseUrl}/api/workers/update-price`,
+      body: {
+        giftId,
+        userId,
+      },
+    });
+
     revalidatePath("/dashboard");
 
     return {
       success: true,
-      message: data.message,
+      message: "Price update started in background. You'll receive an email when complete.",
+      jobId: result.messageId,
     };
   } catch (error) {
+    console.error("Failed to start auto update:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to start auto update",
