@@ -41,31 +41,33 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="py-24 bg-neutral-900 text-white">
-      <div className="container max-w-6xl mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-semibold mb-4">
+    <section id="features" className="py-16 sm:py-20 md:py-24 bg-neutral-900 text-white">
+      <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 sm:mb-16" data-aos="fade-up">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold mb-3 sm:mb-4 px-4">
             Everything You Need,{" "}
             <span className="text-teal-400">
               Nothing You Don&apos;t
             </span>
           </h2>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+          <p className="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto px-4">
             Built for smart shoppers who refuse to overpay. Track, compare, and save effortlessly.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="border border-slate-800 rounded-2xl p-6 hover:border-teal-600/50 transition-all duration-300 backdrop-blur-sm bg-slate-900/50 hover:bg-slate-900/80 group"
+              className="border border-slate-800 rounded-2xl p-5 sm:p-6 hover:border-teal-600/50 transition-all duration-300 backdrop-blur-sm bg-slate-900/50 hover:bg-slate-900/80 group"
+              data-aos="fade-up"
+              data-aos-delay={index * 100}
             >
               <div className="w-12 h-12 bg-teal-600/10 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <feature.icon className="w-6 h-6 text-teal-400" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-slate-400 leading-relaxed">{feature.description}</p>
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">{feature.title}</h3>
+              <p className="text-sm sm:text-base text-slate-400 leading-relaxed">{feature.description}</p>
             </div>
           ))}
         </div>

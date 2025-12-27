@@ -1,3 +1,8 @@
+"use client";
+
+import { useEffect } from "react";
+import AOS from "aos";
+import "aos/dist/aos.css";
 import Navbar from "./navbar";
 import Hero from "./hero";
 import VideoSection from "./video-section";
@@ -7,6 +12,14 @@ import CTA from "./cta";
 import Footer from "./footer";
 
 export function LandingPage() {
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      once: true,
+      easing: "ease-out-cubic",
+    });
+  }, []);
+
   return (
     <div className="min-h-screen relative">
       <Navbar />
