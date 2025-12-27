@@ -20,6 +20,8 @@ import { BudgetProgress } from "@/components/budget-progress";
 import { AddGiftDialog } from "@/components/add-gift-dialog";
 import { GiftCard } from "@/components/gift-card";
 import { ListSelector } from "@/components/list-selector";
+import { OnboardingDialog } from "@/components/onboarding-dialog";
+import { useDashboardTour } from "@/hooks/use-dashboard-tour";
 import { List, Gift } from "@/db/schema";
 import { unarchiveList } from "@/actions/list-actions";
 
@@ -27,6 +29,7 @@ interface DashboardContentProps {
   profile: {
     name: string | null;
     currency: string;
+    onboardingCompleted: boolean;
   };
   lists: List[];
   archivedLists: List[];
@@ -45,6 +48,10 @@ export function DashboardContent({
   const [currentListId, setCurrentListId] = useState(initialListId);
   const [showArchived, setShowArchived] = useState(false);
   const [unarchiving, setUnarchiving] = useState<string | null>(null);
+
+  // Auto-start tour after onboarding is completed
+  const shouldAutoStartTour = profile.onboardingCompleted;
+  useDashboardTour(shouldAutoStartTour);
 
   const handleListChange = (listId: string) => {
     setCurrentListId(listId);
@@ -91,6 +98,9 @@ export function DashboardContent({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      {/* Onboarding Dialog for new users */}
+      <OnboardingDialog open={!profile.onboardingCompleted} />
+
       <Header
         listId={currentListId}
         listName={currentList?.name}
@@ -118,7 +128,7 @@ export function DashboardContent({
         </div>
 
         {/* List Selector */}
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-6 sm:mb-8" data-tour="list-selector">
           <ListSelector
             lists={lists}
             currentListId={currentListId}
@@ -131,7 +141,7 @@ export function DashboardContent({
             {/* Stats Grid */}
             <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
               {/* Budget Card */}
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2" data-tour="budget-card">
                 <BudgetProgress
                   listId={currentList.id}
                   totalBudget={currentList.budget || "0"}
@@ -141,7 +151,7 @@ export function DashboardContent({
               </div>
 
               {/* Total Gifts Card */}
-              <Card className="group hover:shadow-lg transition-all duration-300 border-muted/40">
+              <Card className="group hover:shadow-lg transition-all duration-300 border-muted/40" data-tour="stats-cards">
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -222,7 +232,9 @@ export function DashboardContent({
                     Manage and track your gift list
                   </p>
                 </div>
-                <AddGiftDialog lists={lists} currentListId={currentList.id} />
+                <div data-tour="add-gift">
+                  <AddGiftDialog lists={lists} currentListId={currentList.id} />
+                </div>
               </div>
 
               {gifts.length > 0 ? (

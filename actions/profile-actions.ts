@@ -85,3 +85,36 @@ export async function updateBudget(listId: string, budget: string) {
 
   revalidatePath("/dashboard");
 }
+
+export async function completeOnboarding(data: {
+  country: string;
+  referralSource: string;
+}) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const [profile] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.clerkUserId, userId))
+    .limit(1);
+
+  if (!profile) {
+    throw new Error("Profile not found");
+  }
+
+  await db
+    .update(profiles)
+    .set({
+      country: data.country,
+      referralSource: data.referralSource,
+      onboardingCompleted: true,
+      updatedAt: new Date(),
+    })
+    .where(eq(profiles.clerkUserId, userId));
+
+  revalidatePath("/dashboard");
+}

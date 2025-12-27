@@ -29,7 +29,11 @@ export default async function DashboardPage({
 
   return (
     <DashboardContent
-      profile={profile}
+      profile={{
+        name: profile.name,
+        currency: profile.currency,
+        onboardingCompleted: profile.onboardingCompleted,
+      }}
       lists={lists}
       archivedLists={onlyArchived}
       initialListId={currentListId}
