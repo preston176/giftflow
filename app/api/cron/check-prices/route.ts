@@ -6,7 +6,25 @@ import { gifts, profiles, marketplaceProducts } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { sendPriceAlertEmail } from "@/lib/email";
 import { formatCurrency } from "@/lib/utils";
-import { scrapePrice } from "@/lib/price-scraper";
+import { scrapePriceFromScreenshot } from "@/lib/price-scraper";
+
+// Marketplace search URL generator
+function getMarketplaceSearchUrl(marketplace: string, productName: string): string {
+  const searchQuery = encodeURIComponent(productName);
+
+  switch (marketplace.toLowerCase()) {
+    case "amazon":
+      return `https://www.amazon.com/s?k=${searchQuery}`;
+    case "walmart":
+      return `https://www.walmart.com/search?q=${searchQuery}`;
+    case "target":
+      return `https://www.target.com/s?searchTerm=${searchQuery}`;
+    case "bestbuy":
+      return `https://www.bestbuy.com/site/searchpage.jsp?st=${searchQuery}`;
+    default:
+      return `https://www.google.com/search?q=${searchQuery}`;
+  }
+}
 
 /**
  * Cron job to check prices for all tracked gifts
@@ -68,10 +86,14 @@ async function handler(request: Request) {
           continue;
         }
 
-        // Check prices for all marketplace products
+        // Check prices for all marketplace products using screenshots
         for (const mp of mpProducts) {
           try {
-            const result = await scrapePrice(mp.productUrl);
+            // Use search URL instead of product URL for screenshots
+            const searchUrl = getMarketplaceSearchUrl(mp.marketplace, gift.name);
+            console.log(`[CRON] Checking ${mp.marketplace} via screenshot: ${searchUrl}`);
+
+            const result = await scrapePriceFromScreenshot(searchUrl);
             totalChecked++;
 
             if (result.success && result.price) {
