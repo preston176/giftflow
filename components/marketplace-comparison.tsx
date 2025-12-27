@@ -23,6 +23,7 @@ import { formatDistanceToNow } from "date-fns";
 
 interface MarketplaceComparisonProps {
   giftId: string;
+  giftName: string;
   products: MarketplaceProduct[];
   currentPrimaryMarketplace?: string | null;
 }
@@ -41,8 +42,26 @@ const MARKETPLACE_NAMES: Record<string, string> = {
   bestbuy: "Best Buy",
 };
 
+const getMarketplaceSearchUrl = (marketplace: string, productName: string): string => {
+  const searchQuery = encodeURIComponent(productName);
+
+  switch (marketplace.toLowerCase()) {
+    case "amazon":
+      return `https://www.amazon.com/s?k=${searchQuery}`;
+    case "walmart":
+      return `https://www.walmart.com/search?q=${searchQuery}`;
+    case "target":
+      return `https://www.target.com/s?searchTerm=${searchQuery}`;
+    case "bestbuy":
+      return `https://www.bestbuy.com/site/searchpage.jsp?st=${searchQuery}`;
+    default:
+      return `https://www.google.com/search?q=${searchQuery}`;
+  }
+};
+
 export function MarketplaceComparison({
   giftId,
+  giftName,
   products,
   currentPrimaryMarketplace,
 }: MarketplaceComparisonProps) {
@@ -295,9 +314,10 @@ export function MarketplaceComparison({
                     asChild
                   >
                     <a
-                      href={product.productUrl}
+                      href={getMarketplaceSearchUrl(product.marketplace, giftName)}
                       target="_blank"
                       rel="noopener noreferrer"
+                      title={`Search for "${giftName}" on ${MARKETPLACE_NAMES[product.marketplace] || product.marketplace}`}
                     >
                       <ExternalLink className="h-3 w-3 sm:mr-1.5" />
                       <span className="hidden sm:inline">View</span>
