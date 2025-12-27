@@ -211,6 +211,24 @@ export async function getMarketplaceProducts(giftId: string) {
 /**
  * Sync prices across all marketplaces for a gift
  */
+// Marketplace search URL generator (same as in marketplace-comparison.tsx)
+function getMarketplaceSearchUrl(marketplace: string, productName: string): string {
+  const searchQuery = encodeURIComponent(productName);
+
+  switch (marketplace.toLowerCase()) {
+    case "amazon":
+      return `https://www.amazon.com/s?k=${searchQuery}`;
+    case "walmart":
+      return `https://www.walmart.com/search?q=${searchQuery}`;
+    case "target":
+      return `https://www.target.com/s?searchTerm=${searchQuery}`;
+    case "bestbuy":
+      return `https://www.bestbuy.com/site/searchpage.jsp?st=${searchQuery}`;
+    default:
+      return `https://www.google.com/search?q=${searchQuery}`;
+  }
+}
+
 export async function syncMarketplacePrices(giftId: string) {
   try {
     const { userId } = await auth();
@@ -238,8 +256,12 @@ export async function syncMarketplacePrices(giftId: string) {
     // Bypasses anti-bot protection completely
     for (const mp of gift.marketplaceProducts) {
       try {
+        // Use search URL instead of product URL for screenshots
+        const searchUrl = getMarketplaceSearchUrl(mp.marketplace, gift.name);
+        console.log(`Syncing ${mp.marketplace} using search URL: ${searchUrl}`);
+
         // Use screenshot-based extraction for maximum reliability
-        const result = await scrapePriceFromScreenshot(mp.productUrl);
+        const result = await scrapePriceFromScreenshot(searchUrl);
 
         if (result.success && result.price) {
           await db
