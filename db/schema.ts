@@ -19,6 +19,9 @@ export const profiles = pgTable("profiles", {
   imageUrl: text("image_url"),
   totalBudget: decimal("total_budget", { precision: 10, scale: 2 }).default("0"),
   currency: text("currency").default("USD").notNull(),
+  country: text("country"),
+  referralSource: text("referral_source"),
+  onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -141,6 +144,16 @@ export const listCollaborators = pgTable("list_collaborators", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const feedbacks = pgTable("feedbacks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").notNull(),
+  email: text("email").notNull(),
+  name: text("name").notNull(),
+  feedbackType: text("feedback_type").notNull(),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const profilesRelations = relations(profiles, ({ many }) => ({
   lists: many(lists),
   gifts: many(gifts),
@@ -226,3 +239,5 @@ export type MarketplaceSearchCache = typeof marketplaceSearchCache.$inferSelect;
 export type NewMarketplaceSearchCache = typeof marketplaceSearchCache.$inferInsert;
 export type ProductMatchHistory = typeof productMatchHistory.$inferSelect;
 export type NewProductMatchHistory = typeof productMatchHistory.$inferInsert;
+export type Feedback = typeof feedbacks.$inferSelect;
+export type NewFeedback = typeof feedbacks.$inferInsert;
