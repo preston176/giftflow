@@ -209,4 +209,5 @@ async function sendAlert(
   }
 }
 
+export const POST = verifySignatureAppRouter(handler);
 export const GET = verifySignatureAppRouter(handler);

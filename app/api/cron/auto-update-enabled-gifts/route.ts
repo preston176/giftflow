@@ -12,7 +12,7 @@ const qstash = new Client({
  * Cron job that runs daily to auto-update all gifts with autoUpdateEnabled=true
  * Triggers background updates via QStash for each enabled gift
  */
-export async function GET(request: Request) {
+async function handleRequest(request: Request) {
   try {
     // Verify this is coming from QStash (optional but recommended)
     const authHeader = request.headers.get("authorization");
@@ -105,4 +105,12 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
+}
+
+export async function GET(request: Request) {
+  return handleRequest(request);
+}
+
+export async function POST(request: Request) {
+  return handleRequest(request);
 }

@@ -6,7 +6,7 @@ import { extractMetadataFromScreenshot } from "@/lib/price-scraper";
 
 export const maxDuration = 300; // 5 minutes max
 
-export async function POST(req: Request) {
+async function handleRequest(req: Request) {
   // Verify QStash secret
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -107,6 +107,14 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+}
+
+export async function POST(req: Request) {
+  return handleRequest(req);
+}
+
+export async function GET(req: Request) {
+  return handleRequest(req);
 }
 
 async function takeScreenshot(url: string): Promise<string> {

@@ -6,7 +6,7 @@ import { sendWeeklyReminderEmail } from "@/lib/email";
 
 // This endpoint should be called by a cron service
 // Recommended: Run every Sunday at 9 AM local time
-export async function GET(request: NextRequest) {
+async function handleRequest(request: NextRequest) {
   try {
     // Verify cron secret to prevent unauthorized access
     const authHeader = request.headers.get("authorization");
@@ -134,4 +134,12 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function GET(request: NextRequest) {
+  return handleRequest(request);
+}
+
+export async function POST(request: NextRequest) {
+  return handleRequest(request);
 }
