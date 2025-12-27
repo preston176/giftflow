@@ -632,7 +632,8 @@ async function takeScreenshot(url: string): Promise<string | null> {
   }
 
   try {
-    const apiUrl = `https://shot.screenshotapi.net/screenshot?token=${apiKey}&url=${encodeURIComponent(url)}&output=image&file_type=png&wait_for_event=load`;
+    // Add delay parameter to wait for content to load (especially for dynamic sites like Walmart)
+    const apiUrl = `https://shot.screenshotapi.net/screenshot?token=${apiKey}&url=${encodeURIComponent(url)}&output=image&file_type=png&wait_for_event=load&delay=3000`;
 
     console.log(`Taking screenshot of: ${url}`);
     const response = await fetch(apiUrl);
