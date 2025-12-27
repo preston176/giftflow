@@ -632,7 +632,7 @@ async function takeScreenshot(url: string): Promise<string | null> {
   }
 
   try {
-    const apiUrl = `https://shot.screenshotapi.net/screenshot?token=${apiKey}&url=${encodeURIComponent(url)}&output=base64&file_type=png&wait_for_event=load`;
+    const apiUrl = `https://shot.screenshotapi.net/screenshot?token=${apiKey}&url=${encodeURIComponent(url)}&output=image&file_type=png&wait_for_event=load`;
 
     const response = await fetch(apiUrl);
 
@@ -643,8 +643,22 @@ async function takeScreenshot(url: string): Promise<string | null> {
 
     const data = await response.json();
 
+    // Screenshot API returns a URL to the image
     if (data.screenshot) {
-      return data.screenshot;
+      const imageUrl = data.screenshot;
+
+      // Fetch the image and convert to base64
+      const imageResponse = await fetch(imageUrl);
+
+      if (!imageResponse.ok) {
+        console.error(`Failed to fetch screenshot image: ${imageResponse.status}`);
+        return null;
+      }
+
+      const arrayBuffer = await imageResponse.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString('base64');
+
+      return base64;
     }
 
     console.error('Screenshot API: No screenshot in response');
