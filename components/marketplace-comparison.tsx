@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   ExternalLink,
   Trash2,
@@ -200,8 +200,8 @@ export function MarketplaceComparison({
         </Button>
       </div>
 
-      {/* Marketplace cards grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+      {/* Marketplace list - single column, horizontal layout */}
+      <div className="space-y-3">
         {products.map((product) => {
           const price = product.currentPrice
             ? parseFloat(product.currentPrice)
@@ -229,152 +229,149 @@ export function MarketplaceComparison({
                 !product.inStock ? "opacity-60" : ""
               }`}
             >
-              {/* Best Price Badge */}
-              {isBestPrice && (
-                <div className="absolute -top-2 -right-2 z-10">
-                  <Badge className="bg-green-500 text-white">Best Price</Badge>
-                </div>
-              )}
-
-              {/* Primary Star */}
-              {isPrimary && (
-                <div className="absolute top-2 left-2 z-10">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                </div>
-              )}
-
-              <CardHeader className="pb-2 sm:pb-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-1.5 sm:gap-2">
+              <CardContent className="p-4">
+                {/* Single row layout */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  {/* Left: Marketplace info and badges */}
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     <div
-                      className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                      className={`w-3 h-3 rounded-full flex-shrink-0 ${
                         MARKETPLACE_COLORS[product.marketplace] || "bg-gray-500"
                       }`}
                     />
-                    <CardTitle className="text-xs sm:text-sm truncate">
-                      {MARKETPLACE_NAMES[product.marketplace] ||
-                        product.marketplace}
-                    </CardTitle>
+                    <div className="flex items-center gap-2 min-w-0 flex-1 flex-wrap">
+                      <span className="font-semibold text-sm sm:text-base">
+                        {MARKETPLACE_NAMES[product.marketplace] || product.marketplace}
+                      </span>
+
+                      {/* Badges */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {isPrimary && (
+                          <Badge variant="outline" className="text-xs gap-1">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            Primary
+                          </Badge>
+                        )}
+                        {isBestPrice && (
+                          <Badge className="bg-green-500 text-white text-xs">
+                            Best Price
+                          </Badge>
+                        )}
+                        {confidenceLevel && (
+                          <Badge
+                            variant={
+                              confidenceLevel === "high"
+                                ? "default"
+                                : confidenceLevel === "medium"
+                                ? "secondary"
+                                : "destructive"
+                            }
+                            className="text-xs"
+                          >
+                            {confidence && Math.round(confidence * 100)}% match
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Confidence Badge */}
-                  {confidenceLevel && (
-                    <Badge
-                      variant={
-                        confidenceLevel === "high"
-                          ? "default"
-                          : confidenceLevel === "medium"
-                          ? "secondary"
-                          : "destructive"
-                      }
-                      className="text-[10px] sm:text-xs flex-shrink-0"
-                    >
-                      {confidence && (Math.round(confidence * 100))}% match
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-6">
-                {/* Price */}
-                <div>
-                  {price !== null ? (
-                    <div className="text-xl sm:text-2xl font-bold">
-                      ${price.toFixed(2)}
+                  {/* Center: Price and stock */}
+                  <div className="flex items-center gap-4">
+                    <div className="text-center sm:text-right">
+                      {price !== null ? (
+                        <div className="text-2xl font-bold">
+                          ${price.toFixed(2)}
+                        </div>
+                      ) : (
+                        <div className="text-base text-muted-foreground">
+                          No price
+                        </div>
+                      )}
+                      <div className="flex items-center justify-center sm:justify-end gap-1 text-xs mt-1">
+                        {product.inStock ? (
+                          <>
+                            <Check className="h-3 w-3 text-green-500" />
+                            <span className="text-green-600">In Stock</span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertCircle className="h-3 w-3 text-red-500" />
+                            <span className="text-red-600">Out of Stock</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-base sm:text-lg text-muted-foreground">
-                      Price unavailable
-                    </div>
-                  )}
-                </div>
-
-                {/* Stock Status */}
-                <div className="flex items-center gap-1 text-[10px] sm:text-xs">
-                  {product.inStock ? (
-                    <>
-                      <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
-                      <span className="text-green-600">In Stock</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="h-3 w-3 text-red-500 flex-shrink-0" />
-                      <span className="text-red-600">Out of Stock</span>
-                    </>
-                  )}
-                </div>
-
-                {/* Last Updated */}
-                {product.lastPriceCheck && (
-                  <div className="text-[10px] sm:text-xs text-muted-foreground">
-                    Updated{" "}
-                    {formatDistanceToNow(new Date(product.lastPriceCheck), {
-                      addSuffix: true,
-                    })}
                   </div>
-                )}
 
-                {/* Actions */}
-                <div className="flex gap-1.5 sm:gap-2 pt-1 sm:pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 h-8 sm:h-9 text-xs sm:text-sm"
-                    asChild
-                  >
-                    <a
-                      href={getMarketplaceSearchUrl(product.marketplace, giftName)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title={`Search for "${giftName}" on ${MARKETPLACE_NAMES[product.marketplace] || product.marketplace}`}
+                  {/* Right: Actions */}
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9"
+                      asChild
                     >
-                      <ExternalLink className="h-3 w-3 sm:mr-1.5" />
-                      <span className="hidden sm:inline">View</span>
-                    </a>
-                  </Button>
+                      <a
+                        href={getMarketplaceSearchUrl(product.marketplace, giftName)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={`Search on ${MARKETPLACE_NAMES[product.marketplace] || product.marketplace}`}
+                      >
+                        <ExternalLink className="h-4 w-4 sm:mr-1.5" />
+                        <span className="hidden sm:inline">View</span>
+                      </a>
+                    </Button>
 
-                  {!isPrimary && (
+                    {!isPrimary && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSetPrimary(product.marketplace)}
+                        disabled={loading === product.marketplace}
+                        title="Set as primary"
+                        className="h-9 px-2"
+                      >
+                        <Star className="h-4 w-4" />
+                      </Button>
+                    )}
+
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleSetPrimary(product.marketplace)}
+                      onClick={() => handleRemove(product.marketplace)}
                       disabled={loading === product.marketplace}
-                      title="Set as primary marketplace"
-                      className="h-8 sm:h-9 px-2 sm:px-3"
+                      className="text-destructive hover:text-destructive h-9 px-2"
+                      title="Remove"
                     >
-                      <Star className="h-3 w-3" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  )}
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemove(product.marketplace)}
-                    disabled={loading === product.marketplace}
-                    className="text-destructive hover:text-destructive h-8 sm:h-9 px-2 sm:px-3"
-                    title="Remove marketplace"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                  </div>
                 </div>
 
-                {/* Low Confidence Warning */}
-                {confidenceLevel === "low" && (
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-1.5 sm:p-2 mt-1.5 sm:mt-2">
-                    <p className="text-[10px] sm:text-xs text-yellow-800 dark:text-yellow-200">
-                      Low match confidence - verify this is the same product
-                    </p>
-                  </div>
-                )}
+                {/* Bottom: Last updated and warnings */}
+                <div className="mt-3 flex flex-col gap-2">
+                  {product.lastPriceCheck && (
+                    <div className="text-xs text-muted-foreground">
+                      Updated {formatDistanceToNow(new Date(product.lastPriceCheck), { addSuffix: true })}
+                    </div>
+                  )}
 
-                {/* Medium Confidence Info */}
-                {confidenceLevel === "medium" && (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-1.5 sm:p-2 mt-1.5 sm:mt-2">
-                    <p className="text-[10px] sm:text-xs text-blue-800 dark:text-blue-200">
-                      Possible match - please review
-                    </p>
-                  </div>
-                )}
+                  {confidenceLevel === "low" && (
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-2">
+                      <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                        Low match confidence - verify this is the same product
+                      </p>
+                    </div>
+                  )}
+
+                  {confidenceLevel === "medium" && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-2">
+                      <p className="text-xs text-blue-800 dark:text-blue-200">
+                        Possible match - please review
+                      </p>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           );
