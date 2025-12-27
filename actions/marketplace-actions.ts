@@ -234,17 +234,12 @@ export async function syncMarketplacePrices(giftId: string) {
     const errors: string[] = [];
     let updated = 0;
 
-    // Check prices for all marketplace products with delays
-    for (let i = 0; i < gift.marketplaceProducts.length; i++) {
-      const mp = gift.marketplaceProducts[i];
-
+    // Check prices for all marketplace products using AI
+    // No delays needed since we're using AI extraction, not scraping
+    for (const mp of gift.marketplaceProducts) {
       try {
-        // Add 2-second delay between requests to avoid rate limiting
-        if (i > 0) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-
-        const result = await scrapePrice(mp.productUrl);
+        // Use AI-only mode to skip failed scraping attempts
+        const result = await scrapePrice(mp.productUrl, true);
 
         if (result.success && result.price) {
           await db

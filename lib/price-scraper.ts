@@ -278,8 +278,10 @@ async function scrapeBestBuy(url: string): Promise<PriceResult> {
 
 /**
  * Detect retailer from URL and scrape price
+ * @param url - Product URL to scrape
+ * @param useAIOnly - If true, skip CSS scraping and go straight to AI extraction
  */
-export async function scrapePrice(url: string): Promise<PriceResult> {
+export async function scrapePrice(url: string, useAIOnly: boolean = false): Promise<PriceResult> {
   if (!url) {
     return { success: false, error: "No URL provided" };
   }
@@ -287,6 +289,12 @@ export async function scrapePrice(url: string): Promise<PriceResult> {
   try {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
+
+    // If AI-only mode, skip CSS scraping
+    if (useAIOnly && process.env.GEMINI_API_KEY) {
+      console.log(`Using AI extraction for ${hostname}`);
+      return await scrapePriceWithAI(url);
+    }
 
     let result: PriceResult;
 
