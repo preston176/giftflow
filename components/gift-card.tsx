@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { ExternalLink, Trash2, TrendingDown, TrendingUp, BarChart3, Bell, BellOff, Loader2, Store, ChevronDown, ChevronUp, Zap } from "lucide-react";
+import { ExternalLink, Trash2, TrendingDown, TrendingUp, BarChart3, Loader2, Store, ChevronDown, ChevronUp, Zap } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import { formatCurrency, calculateSavings } from "@/lib/utils";
 import { togglePurchased, deleteGift, autoUpdatePrice, toggleAutoUpdate } from "@/actions/gift-actions";
-import { togglePriceTracking, checkPriceNow } from "@/actions/price-actions";
 import { getMarketplaceProducts } from "@/actions/marketplace-actions";
 import { PriceHistoryChart } from "@/components/price-history-chart";
 import { UpdatePriceDialog } from "@/components/update-price-dialog";
@@ -30,7 +29,6 @@ interface GiftCardProps {
 export function GiftCard({ gift }: GiftCardProps) {
   const [showPriceHistory, setShowPriceHistory] = useState(false);
   const [showMarketplaces, setShowMarketplaces] = useState(false);
-  const [isCheckingPrice, setIsCheckingPrice] = useState(false);
   const [isAutoUpdating, setIsAutoUpdating] = useState(false);
   const [isTogglingPurchased, setIsTogglingPurchased] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -154,59 +152,6 @@ export function GiftCard({ gift }: GiftCardProps) {
     }
   };
 
-  const handleToggleTracking = async () => {
-    const wasEnabled = gift.priceTrackingEnabled;
-
-    try {
-      setIsCheckingPrice(true);
-
-      // Toggle tracking
-      await togglePriceTracking(
-        gift.id,
-        !wasEnabled,
-        gift.targetPrice
-      );
-
-      // If enabling tracking, immediately check the price
-      if (!wasEnabled && gift.url) {
-        toast({
-          title: "Checking price...",
-          description: "Fetching current price from product page",
-        });
-
-        const result = await checkPriceNow(gift.id);
-
-        if (result.success && result.price) {
-          toast({
-            title: "Price tracking enabled!",
-            description: `Current price: ${formatCurrency(result.price)}`,
-          });
-        } else {
-          toast({
-            title: "Tracking enabled",
-            description: result.error || "Could not fetch price automatically. Try 'Check Now' in price history.",
-            variant: "default",
-          });
-        }
-      } else {
-        toast({
-          title: wasEnabled ? "Tracking disabled" : "Tracking enabled",
-          description: wasEnabled
-            ? "Price tracking has been turned off"
-            : "Price tracking has been turned on",
-        });
-      }
-    } catch (error) {
-      console.error("Failed to toggle price tracking:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update price tracking",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCheckingPrice(false);
-    }
-  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -236,12 +181,6 @@ export function GiftCard({ gift }: GiftCardProps) {
             className="object-cover transition-transform group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          {gift.priceTrackingEnabled && gift.url && (
-            <div className="absolute top-2 left-2 bg-green-500/90 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-              <Bell className="h-3 w-3" />
-              Tracking
-            </div>
-          )}
         </div>
       )}
       <CardContent className="p-4 space-y-2">
@@ -378,50 +317,25 @@ export function GiftCard({ gift }: GiftCardProps) {
           )}
         </div>
         {gift.url && (
-          <div className="flex gap-2 w-full">
-            <Button
-              onClick={handleToggleTracking}
-              variant={gift.priceTrackingEnabled ? "default" : "outline"}
-              size="sm"
-              className="flex-1"
-              disabled={isCheckingPrice}
-            >
-              {isCheckingPrice ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  Checking...
-                </>
-              ) : gift.priceTrackingEnabled ? (
-                <>
-                  <Bell className="h-4 w-4 mr-1" />
-                  Tracking
-                </>
-              ) : (
-                <>
-                  <BellOff className="h-4 w-4 mr-1" />
-                  Track Price
-                </>
-              )}
-            </Button>
-            <Dialog open={showPriceHistory} onOpenChange={setShowPriceHistory}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <BarChart3 className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>{gift.name}</DialogTitle>
-                </DialogHeader>
-                <PriceHistoryChart
-                  giftId={gift.id}
-                  giftName={gift.name}
-                  currentPrice={gift.currentPrice}
-                  targetPrice={gift.targetPrice}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
+          <Dialog open={showPriceHistory} onOpenChange={setShowPriceHistory}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                View Price History
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>{gift.name}</DialogTitle>
+              </DialogHeader>
+              <PriceHistoryChart
+                giftId={gift.id}
+                giftName={gift.name}
+                currentPrice={gift.currentPrice}
+                targetPrice={gift.targetPrice}
+              />
+            </DialogContent>
+          </Dialog>
         )}
         <div className="flex gap-2 w-full">
           <Button

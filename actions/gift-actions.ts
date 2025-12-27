@@ -7,6 +7,9 @@ import { eq, and, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { extractProductMetadata, extractMetadataFromScreenshot } from "@/lib/price-scraper";
 import { sendPriceAlertEmail } from "@/lib/email";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 interface AddGiftInput {
   listId?: string;
@@ -349,10 +352,24 @@ export async function toggleAutoUpdate(giftId: string, enabled: boolean) {
       })
       .where(eq(gifts.id, giftId));
 
-    // Send welcome email when auto-update is activated
+    // Send email when auto-update is toggled
+    console.log(`[toggleAutoUpdate] Preparing to send email. Enabled: ${enabled}`);
+    console.log(`[toggleAutoUpdate] Profile email: ${profile.email}`);
+    console.log(`[toggleAutoUpdate] RESEND_API_KEY configured: ${!!process.env.RESEND_API_KEY}`);
+
+    if (!profile.email) {
+      console.error("[toggleAutoUpdate] No email address found for user");
+      revalidatePath("/dashboard");
+      return {
+        success: true,
+        enabled,
+        message: "Auto-update toggled but no email sent (no email address)",
+      };
+    }
+
     if (enabled) {
-      const { Resend } = await import("resend");
-      const resend = new Resend(process.env.RESEND_API_KEY);
+      // Email when turning ON
+      console.log(`[toggleAutoUpdate] Sending AUTO-UPDATE ON email to: ${profile.email}`);
 
       const emailHtml = `
         <!DOCTYPE html>
@@ -436,14 +453,108 @@ export async function toggleAutoUpdate(giftId: string, enabled: boolean) {
       `;
 
       try {
-        await resend.emails.send({
-          from: "PriceFlow <noreply@prestonmayieka.com>",
+        const result = await resend.emails.send({
+          from: "PriceFlow <noreply@noreply.prestonmayieka.com>",
           to: profile.email,
           subject: `⚡ Auto-Update Activated: ${gift.name}`,
           html: emailHtml,
         });
+        console.log(`[toggleAutoUpdate] ✓ Email sent successfully:`, result);
       } catch (emailError) {
-        console.error("Failed to send auto-update welcome email:", emailError);
+        console.error("[toggleAutoUpdate] ✗ Failed to send auto-update ON email:", emailError);
+        // Log detailed error information
+        if (emailError instanceof Error) {
+          console.error("[toggleAutoUpdate] Error message:", emailError.message);
+          console.error("[toggleAutoUpdate] Error stack:", emailError.stack);
+        }
+        // Don't throw - email failure shouldn't break the toggle
+      }
+    } else {
+      // Email when turning OFF
+      console.log(`[toggleAutoUpdate] Sending AUTO-UPDATE OFF email to: ${profile.email}`);
+
+      const emailHtml = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+              .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+              .info-box { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #6b7280; }
+              .cta { background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; }
+              .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
+              .gift-name { background: white; padding: 15px; border-radius: 8px; margin: 20px 0; font-size: 18px; font-weight: 600; text-align: center; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1 style="margin: 0;">⏸️ Auto-Update Paused</h1>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">You're back in manual control</p>
+              </div>
+
+              <div class="content">
+                <p>Hey there! 👋</p>
+
+                <p>You've turned off <strong>Auto-Update</strong> for:</p>
+
+                <div class="gift-name">
+                  ${gift.name}
+                </div>
+
+                <div class="info-box">
+                  <h3 style="margin: 0 0 10px 0; color: #4b5563;">What This Means</h3>
+                  <ul style="color: #6b7280; line-height: 1.8; margin: 10px 0;">
+                    <li><strong>No more daily checks:</strong> We won't automatically check prices for this item</li>
+                    <li><strong>No price alerts:</strong> You won't receive emails when prices change</li>
+                    <li><strong>Manual updates only:</strong> You can still manually update prices anytime</li>
+                  </ul>
+                </div>
+
+                <h3>Want to Track Prices Again?</h3>
+                <p>No problem! You can turn Auto-Update back on anytime from your dashboard. Just click the "Auto: OFF" button to re-enable automatic price tracking.</p>
+
+                <h3 style="margin-top: 30px;">Other Ways to Track Prices:</h3>
+                <ul style="color: #4b5563; line-height: 1.8;">
+                  <li><strong>Manual Sync:</strong> Click "Sync Prices" in the marketplace section</li>
+                  <li><strong>Update Price:</strong> Use the "Update Price" button to manually enter new prices</li>
+                  <li><strong>Price History:</strong> View historical price trends anytime</li>
+                </ul>
+
+                <div style="text-align: center;">
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" class="cta">Go to Dashboard</a>
+                </div>
+
+                <div class="footer">
+                  <p><strong>PriceFlow</strong> - Your prices, your way</p>
+                  <p style="font-size: 12px; margin-top: 15px;">
+                    You're receiving this because you paused auto-update for ${gift.name}.<br>
+                    Manage your settings in your <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard">dashboard</a>.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+
+      try {
+        const result = await resend.emails.send({
+          from: "PriceFlow <noreply@noreply.prestonmayieka.com>",
+          to: profile.email,
+          subject: `⏸️ Auto-Update Paused: ${gift.name}`,
+          html: emailHtml,
+        });
+        console.log(`[toggleAutoUpdate] ✓ Email sent successfully:`, result);
+      } catch (emailError) {
+        console.error("[toggleAutoUpdate] ✗ Failed to send auto-update OFF email:", emailError);
+        // Log detailed error information
+        if (emailError instanceof Error) {
+          console.error("[toggleAutoUpdate] Error message:", emailError.message);
+          console.error("[toggleAutoUpdate] Error stack:", emailError.stack);
+        }
         // Don't throw - email failure shouldn't break the toggle
       }
     }
@@ -520,9 +631,6 @@ export async function autoUpdatePrice(giftId: string) {
 
     // Send initial email notification
     if (profile.email) {
-      const { Resend } = await import("resend");
-      const resend = new Resend(process.env.RESEND_API_KEY);
-
       const emailHtml = `
         <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2563eb;">🚀 Price Update Started</h2>
@@ -564,7 +672,7 @@ export async function autoUpdatePrice(giftId: string) {
       `;
 
       await resend.emails.send({
-        from: "GiftFlow <noreply@giftflow.app>",
+        from: "PriceFlow <noreply@noreply.prestonmayieka.com>",
         to: profile.email,
         subject: `Price Update Started: ${gift.name}`,
         html: emailHtml,
