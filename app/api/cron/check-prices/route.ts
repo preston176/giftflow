@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { verifySignatureAppRouter } from "@upstash/qstash/nextjs";
-import { getGiftsForPriceCheck, checkPricesForGifts } from "@/actions/price-actions";
+import {
+  getGiftsForPriceCheck,
+  checkPricesForGifts,
+} from "@/actions/price-actions";
 import { db } from "@/db";
 import { gifts, profiles, marketplaceProducts } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -9,7 +12,10 @@ import { formatCurrency } from "@/lib/utils";
 import { scrapePriceFromScreenshot } from "@/lib/price-scraper";
 
 // Marketplace search URL generator
-function getMarketplaceSearchUrl(marketplace: string, productName: string): string {
+function getMarketplaceSearchUrl(
+  marketplace: string,
+  productName: string
+): string {
   const searchQuery = encodeURIComponent(productName);
 
   switch (marketplace.toLowerCase()) {
@@ -38,7 +44,6 @@ function getMarketplaceSearchUrl(marketplace: string, productName: string): stri
  *    - cron: 0 10 * * * (10 AM daily)
  */
 async function handler(request: Request) {
-
   try {
     // Get all gifts that need price checking
     const giftsToCheck = await getGiftsForPriceCheck();
@@ -74,8 +79,8 @@ async function handler(request: Request) {
           const giftIds = [gift.id];
           const results = await checkPricesForGifts(giftIds);
           totalChecked += results.length;
-          totalSuccessful += results.filter(r => r.success).length;
-          totalFailed += results.filter(r => !r.success).length;
+          totalSuccessful += results.filter((r) => r.success).length;
+          totalFailed += results.filter((r) => !r.success).length;
 
           // Handle alert for single marketplace
           const result = results[0];
@@ -90,8 +95,13 @@ async function handler(request: Request) {
         for (const mp of mpProducts) {
           try {
             // Use search URL instead of product URL for screenshots
-            const searchUrl = getMarketplaceSearchUrl(mp.marketplace, gift.name);
-            console.log(`[CRON] Checking ${mp.marketplace} via screenshot: ${searchUrl}`);
+            const searchUrl = getMarketplaceSearchUrl(
+              mp.marketplace,
+              gift.name
+            );
+            console.log(
+              `[CRON] Checking ${mp.marketplace} via screenshot: ${searchUrl}`
+            );
 
             const result = await scrapePriceFromScreenshot(searchUrl);
             totalChecked++;
@@ -119,14 +129,19 @@ async function handler(request: Request) {
               totalFailed++;
             }
           } catch (error) {
-            console.error(`Failed to check price for ${mp.marketplace}:`, error);
+            console.error(
+              `Failed to check price for ${mp.marketplace}:`,
+              error
+            );
             totalFailed++;
           }
         }
 
         // Update gift with best price and primary marketplace
         if (bestPrice !== null && bestMarketplace !== null) {
-          const oldPrice = gift.currentPrice ? parseFloat(gift.currentPrice) : null;
+          const oldPrice = gift.currentPrice
+            ? parseFloat(gift.currentPrice)
+            : null;
           const shouldAlert =
             oldPrice !== null &&
             bestPrice < oldPrice &&

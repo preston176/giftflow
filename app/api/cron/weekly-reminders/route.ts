@@ -56,15 +56,15 @@ async function handleRequest(request: NextRequest) {
 
         // Count items without recent price checks
         const itemsToCheck = userGifts.filter(
-          (g) =>
-            !g.lastPriceCheck ||
-            new Date(g.lastPriceCheck) < sevenDaysAgo
+          (g) => !g.lastPriceCheck || new Date(g.lastPriceCheck) < sevenDaysAgo
         ).length;
 
         // Skip if no items need checking
         if (itemsToCheck === 0) {
           results.skipped++;
-          console.log(`Skipping ${profile.name || profile.email}: No items to check`);
+          console.log(
+            `Skipping ${profile.name || profile.email}: No items to check`
+          );
           continue;
         }
 
@@ -83,15 +83,14 @@ async function handleRequest(request: NextRequest) {
           .filter((s) => s.savings > 0);
 
         const totalSavings = savingsData.reduce((sum, s) => sum + s.savings, 0);
-        const bestDeal = savingsData.reduce<{ name: string; savings: number } | undefined>(
-          (best, item) => {
-            if (!best || item.savings > best.savings) {
-              return item;
-            }
-            return best;
-          },
-          undefined
-        );
+        const bestDeal = savingsData.reduce<
+          { name: string; savings: number } | undefined
+        >((best, item) => {
+          if (!best || item.savings > best.savings) {
+            return item;
+          }
+          return best;
+        }, undefined);
 
         // Send reminder email
         await sendWeeklyReminderEmail({

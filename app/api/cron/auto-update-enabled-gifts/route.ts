@@ -86,7 +86,9 @@ async function handleRequest(request: Request) {
     const successCount = results.filter((r) => r.success).length;
     const failCount = results.filter((r) => !r.success).length;
 
-    console.log(`Auto-update cron completed: ${successCount} queued, ${failCount} failed`);
+    console.log(
+      `Auto-update cron completed: ${successCount} queued, ${failCount} failed`
+    );
 
     return NextResponse.json({
       success: true,

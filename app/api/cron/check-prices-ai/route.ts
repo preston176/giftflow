@@ -64,7 +64,9 @@ async function handleRequest(request: NextRequest) {
 
         if (metadata.success && metadata.price) {
           const newPrice = metadata.price;
-          const oldPrice = gift.currentPrice ? parseFloat(gift.currentPrice) : null;
+          const oldPrice = gift.currentPrice
+            ? parseFloat(gift.currentPrice)
+            : null;
           const targetPrice = parseFloat(gift.targetPrice);
 
           // Calculate lowest and highest prices
@@ -105,7 +107,9 @@ async function handleRequest(request: NextRequest) {
               to: profile.email,
               userName: profile.name || "there",
               giftName: gift.name,
-              oldPrice: oldPrice ? `$${oldPrice.toFixed(2)}` : `$${targetPrice.toFixed(2)}`,
+              oldPrice: oldPrice
+                ? `$${oldPrice.toFixed(2)}`
+                : `$${targetPrice.toFixed(2)}`,
               newPrice: `$${newPrice.toFixed(2)}`,
               savings: `$${(targetPrice - newPrice).toFixed(2)}`,
               productUrl: gift.url || undefined,

@@ -32,7 +32,7 @@ async function handleRequest(req: Request) {
     for (const { gift, userEmail } of giftsWithUrls) {
       try {
         // Rate limit: wait 2s between requests to avoid overwhelming the API
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         console.log(`Checking price for: ${gift.name} (${gift.url})`);
 
@@ -47,7 +47,9 @@ async function handleRequest(req: Request) {
           const newPrice = result.price;
           const targetPrice = parseFloat(gift.targetPrice);
 
-          console.log(`Price check: ${gift.name} - Old: $${oldPrice}, New: $${newPrice}, Target: $${targetPrice}`);
+          console.log(
+            `Price check: ${gift.name} - Old: $${oldPrice}, New: $${newPrice}, Target: $${targetPrice}`
+          );
 
           // Update price in database
           await db
@@ -68,7 +70,7 @@ async function handleRequest(req: Request) {
 
             await sendPriceAlertEmail({
               to: userEmail!,
-              userName: userEmail!.split('@')[0], // Use email username as fallback
+              userName: userEmail!.split("@")[0], // Use email username as fallback
               giftName: gift.name,
               oldPrice: `$${oldPrice.toFixed(2)}`,
               newPrice: `$${newPrice.toFixed(2)}`,
@@ -79,7 +81,9 @@ async function handleRequest(req: Request) {
             priceDrops++;
           }
         } else {
-          console.error(`Failed to extract price for ${gift.name}: ${result.error}`);
+          console.error(
+            `Failed to extract price for ${gift.name}: ${result.error}`
+          );
           errors++;
         }
       } catch (error) {
@@ -103,7 +107,10 @@ async function handleRequest(req: Request) {
   } catch (error) {
     console.error("Price update cron failed:", error);
     return Response.json(
-      { error: "Failed to update prices", details: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Failed to update prices",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
