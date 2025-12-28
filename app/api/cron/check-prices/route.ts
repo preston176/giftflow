@@ -85,8 +85,12 @@ async function handler(request: Request) {
           // Handle alert for single marketplace
           const result = results[0];
           if (result?.success && result.shouldAlert) {
-            await sendAlert(gift, result.price!, null);
-            alertsSent.push(gift.id);
+            const alertResult = await sendAlert(gift, result.price!, null);
+            if (alertResult.success) {
+              alertsSent.push(gift.id);
+            } else {
+              console.error(`Failed to send alert for ${gift.id}: ${alertResult.error}`);
+            }
           }
           continue;
         }
@@ -160,8 +164,12 @@ async function handler(request: Request) {
 
           // Send alert if price dropped
           if (shouldAlert) {
-            await sendAlert(gift, bestPrice, bestMarketplace);
-            alertsSent.push(gift.id);
+            const alertResult = await sendAlert(gift, bestPrice, bestMarketplace);
+            if (alertResult.success) {
+              alertsSent.push(gift.id);
+            } else {
+              console.error(`Failed to send alert for ${gift.id}: ${alertResult.error}`);
+            }
           }
         }
       } catch (error) {
@@ -193,7 +201,7 @@ async function sendAlert(
   gift: any,
   newPrice: number,
   marketplace: string | null
-) {
+): Promise<{ success: boolean; error?: string }> {
   try {
     const [profile] = await db
       .select()
@@ -201,16 +209,14 @@ async function sendAlert(
       .where(eq(profiles.id, gift.userId))
       .limit(1);
 
-    if (!profile || !profile.email) return;
+    if (!profile || !profile.email) {
+      return { success: false, error: "No profile or email found" };
+    }
 
     const targetPrice = parseFloat(gift.targetPrice);
     const savings = targetPrice - newPrice;
 
-    const marketplaceText = marketplace
-      ? ` on ${marketplace.charAt(0).toUpperCase() + marketplace.slice(1)}`
-      : "";
-
-    await sendPriceAlertEmail({
+    const emailResult = await sendPriceAlertEmail({
       to: profile.email,
       userName: profile.name || "there",
       giftName: gift.name,
@@ -219,8 +225,17 @@ async function sendAlert(
       savings: formatCurrency(savings),
       productUrl: gift.url || undefined,
     });
+
+    if (!emailResult.success) {
+      console.error(`Failed to send alert for ${gift.id}: ${emailResult.error}`);
+      return { success: false, error: emailResult.error };
+    }
+
+    return { success: true };
   } catch (error) {
-    console.error(`Failed to send alert for ${gift.id}:`, error);
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    console.error(`Failed to send alert for ${gift.id}:`, errorMsg);
+    return { success: false, error: errorMsg };
   }
 }
 

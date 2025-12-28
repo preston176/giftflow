@@ -68,7 +68,7 @@ async function handleRequest(req: Request) {
 
             const savings = (oldPrice - newPrice).toFixed(2);
 
-            await sendPriceAlertEmail({
+            const emailResult = await sendPriceAlertEmail({
               to: userEmail!,
               userName: userEmail!.split("@")[0], // Use email username as fallback
               giftName: gift.name,
@@ -78,7 +78,11 @@ async function handleRequest(req: Request) {
               productUrl: gift.url || undefined,
             });
 
-            priceDrops++;
+            if (emailResult.success) {
+              priceDrops++;
+            } else {
+              console.error(`Failed to send price alert for ${gift.name}: ${emailResult.error}`);
+            }
           }
         } else {
           console.error(

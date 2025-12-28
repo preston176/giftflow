@@ -103,7 +103,7 @@ async function handleRequest(request: NextRequest) {
           const wasAboveTarget = oldPrice ? oldPrice >= targetPrice : true;
 
           if (isPriceDrop && wasAboveTarget && profile.email) {
-            await sendPriceAlertEmail({
+            const emailResult = await sendPriceAlertEmail({
               to: profile.email,
               userName: profile.name || "there",
               giftName: gift.name,
@@ -115,8 +115,13 @@ async function handleRequest(request: NextRequest) {
               productUrl: gift.url || undefined,
             });
 
-            results.priceDrops++;
-            console.log(`🎉 Price drop alert sent for: ${gift.name}`);
+            if (emailResult.success) {
+              results.priceDrops++;
+              console.log(`🎉 Price drop alert sent for: ${gift.name}`);
+            } else {
+              console.error(`Failed to send price alert for ${gift.name}: ${emailResult.error}`);
+              results.errors.push(`Failed to send alert for ${gift.name}: ${emailResult.error}`);
+            }
           }
 
           results.successful++;

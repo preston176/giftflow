@@ -93,7 +93,7 @@ async function handleRequest(request: NextRequest) {
         }, undefined);
 
         // Send reminder email
-        await sendWeeklyReminderEmail({
+        const emailResult = await sendWeeklyReminderEmail({
           to: profile.email!,
           userName: profile.name || "there",
           itemsToCheck,
@@ -102,8 +102,12 @@ async function handleRequest(request: NextRequest) {
           bestDeal,
         });
 
-        results.emailsSent++;
-        console.log(`✓ Sent reminder to: ${profile.name || profile.email}`);
+        if (emailResult.success) {
+          results.emailsSent++;
+          console.log(`✓ Sent reminder to: ${profile.name || profile.email}`);
+        } else {
+          throw new Error(emailResult.error || "Failed to send email");
+        }
 
         // Add delay between emails to avoid rate limiting
         await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay
