@@ -1,8 +1,13 @@
 "use client";
 
 import CountUp from "react-countup";
+import { Play } from "lucide-react";
 
 export default function VideoSection() {
+  const videoUrl = "https://www.youtube.com/watch?v=xSZDWvrKzfY";
+  const videoId = "xSZDWvrKzfY";
+  const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+
   return (
     <section id="how-it-works" className="py-16 sm:py-20 md:py-24 bg-neutral-900 text-white">
       <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -17,20 +22,28 @@ export default function VideoSection() {
         </div>
 
         {/* Video Container */}
-        <div
-          className="relative aspect-video max-w-4xl mx-auto rounded-xl sm:rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/50 backdrop-blur-sm"
+        <a
+          href={videoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative block aspect-video max-w-4xl mx-auto rounded-xl sm:rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/50 backdrop-blur-sm group cursor-pointer"
           data-aos="zoom-in"
           data-aos-delay="100"
         >
-          <iframe
-            className="w-full h-full"
-            src="https://www.youtube.com/embed/YOUR_VIDEO_ID?autoplay=1"
-            title="PriceFlow Demo"
-            style={{ border: 0 }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
+          {/* Thumbnail */}
+          <img
+            src={thumbnailUrl}
+            alt="PriceFlow Demo Video"
+            className="w-full h-full object-cover"
           />
-        </div>
+
+          {/* Play Button Overlay */}
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/30 transition-colors">
+            <div className="bg-teal-500 rounded-full p-6 group-hover:bg-teal-400 group-hover:scale-110 transition-all shadow-2xl">
+              <Play className="w-12 h-12 text-white fill-white" />
+            </div>
+          </div>
+        </a>
 
         {/* Optional: Video Features */}
         <div
