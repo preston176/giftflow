@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { gifts } from "@/db/schema";
+import { items } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { Client } from "@upstash/qstash";
 
@@ -9,8 +9,8 @@ const qstash = new Client({
 });
 
 /**
- * Cron job that runs daily to auto-update all gifts with autoUpdateEnabled=true
- * Triggers background updates via QStash for each enabled gift
+ * Cron job that runs daily to auto-update all items with autoUpdateEnabled=true
+ * Triggers background updates via QStash for each enabled item
  */
 async function handleRequest(request: Request) {
   try {
@@ -22,19 +22,19 @@ async function handleRequest(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Find all gifts with auto-update enabled
-    const enabledGifts = await db
+    // Find all items with auto-update enabled
+    const enabledItems = await db
       .select()
-      .from(gifts)
-      .where(eq(gifts.autoUpdateEnabled, true));
+      .from(items)
+      .where(eq(items.autoUpdateEnabled, true));
 
-    console.log(`Found ${enabledGifts.length} gifts with auto-update enabled`);
+    console.log(`Found ${enabledItems.length} items with auto-update enabled`);
 
-    if (enabledGifts.length === 0) {
+    if (enabledItems.length === 0) {
       return NextResponse.json({
         success: true,
-        message: "No gifts with auto-update enabled",
-        giftsUpdated: 0,
+        message: "No items with auto-update enabled",
+        itemsUpdated: 0,
       });
     }
 
@@ -43,15 +43,15 @@ async function handleRequest(request: Request) {
       throw new Error("NEXT_PUBLIC_APP_URL not configured");
     }
 
-    // Queue background updates for each gift
-    const updatePromises = enabledGifts.map(async (gift) => {
+    // Queue background updates for each item
+    const updatePromises = enabledItems.map(async (item) => {
       try {
         // Trigger background update via QStash
         const result = await qstash.publishJSON({
           url: `${baseUrl}/api/workers/update-price`,
           body: {
-            giftId: gift.id,
-            userId: gift.userId,
+            itemId: item.id,
+            userId: item.userId,
           },
           // Add delay to stagger updates (avoid overwhelming the system)
           delay: Math.floor(Math.random() * 300), // Random delay 0-5 minutes
@@ -59,23 +59,23 @@ async function handleRequest(request: Request) {
 
         // Update lastAutoUpdate timestamp
         await db
-          .update(gifts)
+          .update(items)
           .set({
             lastAutoUpdate: new Date(),
           })
-          .where(eq(gifts.id, gift.id));
+          .where(eq(items.id, item.id));
 
         return {
-          giftId: gift.id,
-          giftName: gift.name,
+          itemId: item.id,
+          itemName: item.name,
           success: true,
           messageId: result.messageId,
         };
       } catch (error) {
-        console.error(`Failed to queue update for gift ${gift.id}:`, error);
+        console.error(`Failed to queue update for item ${item.id}:`, error);
         return {
-          giftId: gift.id,
-          giftName: gift.name,
+          itemId: item.id,
+          itemName: item.name,
           success: false,
           error: error instanceof Error ? error.message : "Unknown error",
         };
@@ -93,8 +93,8 @@ async function handleRequest(request: Request) {
     return NextResponse.json({
       success: true,
       message: `Queued ${successCount} auto-updates`,
-      giftsUpdated: successCount,
-      giftsFailed: failCount,
+      itemsUpdated: successCount,
+      itemsFailed: failCount,
       results,
     });
   } catch (error) {
