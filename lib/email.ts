@@ -7,7 +7,7 @@ const resend = process.env.RESEND_API_KEY
 interface PriceAlertEmailData {
   to: string;
   userName: string;
-  giftName: string;
+  itemName: string;
   oldPrice: string;
   newPrice: string;
   savings: string;
@@ -24,7 +24,7 @@ export async function sendPriceAlertEmail(data: PriceAlertEmailData) {
     const { error } = await resend.emails.send({
       from: "PriceFlow <noreply@noreply.prestonmayieka.com>",
       to: data.to,
-      subject: `Price Drop Alert: ${data.giftName} is now ${data.newPrice}!`,
+      subject: `Price Drop Alert: ${data.itemName} is now ${data.newPrice}!`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -96,7 +96,7 @@ export async function sendPriceAlertEmail(data: PriceAlertEmailData) {
                 <p style="font-size: 15px; color: #475569;">Hi ${data.userName},</p>
 
                 <p style="font-size: 15px; color: #475569;">
-                  Great news! The price for <strong>${data.giftName}</strong> has dropped!
+                  Great news! The price for <strong>${data.itemName}</strong> has dropped!
                 </p>
 
                 <div class="price-box">
@@ -160,7 +160,7 @@ interface DailySummaryEmailData {
   to: string;
   userName: string;
   priceDrops: Array<{
-    giftName: string;
+    itemName: string;
     oldPrice: string;
     newPrice: string;
     savings: string;
@@ -261,7 +261,7 @@ export async function sendDailySummaryEmail(data: DailySummaryEmailData) {
                   .map(
                     (drop) => `
                 <div class="item-box">
-                  <h3 style="margin: 0 0 12px 0; font-size: 17px; color: #0f766e;">${drop.giftName}</h3>
+                  <h3 style="margin: 0 0 12px 0; font-size: 17px; color: #0f766e;">${drop.itemName}</h3>
                   <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <div>
                       <span style="font-size: 14px; text-decoration: line-through; color: #94a3b8;">${drop.oldPrice}</span>
@@ -282,7 +282,7 @@ export async function sendDailySummaryEmail(data: DailySummaryEmailData) {
                   .join("")}
 
                 <div style="text-align: center; margin-top: 35px;">
-                  <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" class="cta">View All Gifts</a>
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" class="cta">View All Items</a>
                 </div>
 
                 <div class="footer">
@@ -315,7 +315,7 @@ interface WeeklyReminderEmailData {
   to: string;
   userName: string;
   itemsToCheck: number;
-  giftsWithPrices: number;
+  itemsWithPrices: number;
   potentialSavings: number;
   bestDeal?: {
     name: string;
@@ -386,7 +386,7 @@ export async function sendWeeklyReminderEmail(data: WeeklyReminderEmailData) {
 
               <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 4px;">
                 <p style="margin: 0; font-size: 14px; color: #065f46;">
-                  <strong>Pro tip:</strong> Click "Update Price" on each gift card to manually enter the current price or upload a screenshot for AI-powered extraction!
+                  <strong>Pro tip:</strong> Click "Update Price" on each item card to manually enter the current price or upload a screenshot for AI-powered extraction!
                 </p>
               </div>
 
