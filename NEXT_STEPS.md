@@ -1,7 +1,7 @@
 # Next Steps - Project Status & Resume Guide
 
 **Last Updated**: December 26, 2024
-**Production URL**: https://giftflow-zeta.vercel.app
+**Production URL**: https://your-app.vercel.app
 **QStash Status**: ✅ All 3 schedules active and running
 
 ---
@@ -9,10 +9,10 @@
 ## ✅ Recently Completed
 
 ### QStash Cron Jobs (Dec 26, 2024)
-- ✅ Created `/api/cron/auto-update-enabled-gifts` endpoint
+- ✅ Created `/api/cron/auto-update-enabled-items` endpoint
 - ✅ Set up all 3 QStash schedules on production:
   - Daily AI Price Check (2 AM UTC) - `scd_6As9m75HoU51axopetQtZDkTJhiT`
-  - Auto-Update Enabled Gifts (6 AM UTC) - `scd_5KxGh8o7P4jF3H9WMkmLTef1m63f`
+  - Auto-Update Enabled Items (6 AM UTC) - `scd_5KxGh8o7P4jF3H9WMkmLTef1m63f`
   - Weekly Reminders (Sunday 9 AM) - `scd_4g5zkbAkGxrHJyzDBriECZDiYkQx`
 - ✅ Removed Vercel crons (requires $20/month Pro plan)
 - ✅ Updated documentation to focus on free QStash setup
@@ -26,7 +26,7 @@
 - ✅ Database schema with marketplace_products, search_cache, match_history tables
 
 ### Auto-Update System
-- ✅ Toggle "Auto: ON/OFF" button on each gift card
+- ✅ Toggle "Auto: ON/OFF" button on each item card
 - ✅ Manual "Update Now" button when auto-update is enabled
 - ✅ Background processing via QStash workers
 - ✅ Two-email flow: start notification + completion with results
@@ -50,16 +50,16 @@
 ## 🚀 Current Production Status
 
 ### Live Features
-1. **Gift Management** - Add, edit, delete gifts with images and URLs ✅
-2. **Price Tracking** - Enable tracking per gift, manual updates ✅
+1. **Item Management** - Add, edit, delete items with images and URLs ✅
+2. **Price Tracking** - Enable tracking per item, manual updates ✅
 3. **Auto-Update** - Toggle auto-updates, background processing ✅
 4. **Marketplace Comparison** - Search and compare across 4 marketplaces ✅
 5. **Email Alerts** - Price drop notifications via Resend ✅
 6. **Scheduled Crons** - 3 QStash jobs running automatically ✅
 
 ### Active Cron Jobs (Running Daily)
-- **2 AM UTC**: AI price checks for all tracked gifts (max 100/day)
-- **6 AM UTC**: Auto-update for gifts with auto-update enabled
+- **2 AM UTC**: AI price checks for all tracked items (max 100/day)
+- **6 AM UTC**: Auto-update for items with auto-update enabled
 - **9 AM Sunday**: Weekly reminder emails with savings summary
 
 ### Environment Setup
@@ -71,7 +71,7 @@
 ✅ SERPAPI_KEY - Active, marketplace search working
 ✅ RESEND_API_KEY - Active, emails sending
 ✅ DATABASE_URL - Neon PostgreSQL connected
-✅ NEXT_PUBLIC_APP_URL - https://giftflow-zeta.vercel.app
+✅ NEXT_PUBLIC_APP_URL - https://your-app.vercel.app
 ```
 
 ---
@@ -92,7 +92,7 @@
    - Test weekly reminder (wait for Sunday 9 AM UTC)
 
 3. **Test Auto-Update Flow End-to-End**
-   - Create a test gift with a product URL
+   - Create a test item with a product URL
    - Toggle "Auto: ON"
    - Click the manual update button (lightning icon)
    - Verify you receive TWO emails:
@@ -101,14 +101,14 @@
    - Check that price is updated in dashboard
 
 4. **Test Marketplace Search**
-   - Add a new gift (e.g., "PlayStation 5")
+   - Add a new item (e.g., "PlayStation 5")
    - Verify search results appear from multiple marketplaces
    - Select a product and verify it's added correctly
    - Check marketplace comparison view shows all products
 
 ### Medium Priority
 5. **Database Performance**
-   - Monitor query performance with many gifts (>100)
+   - Monitor query performance with many items (>100)
    - Check if indexes are needed for large datasets
    - Verify price history charts load quickly
 
@@ -126,7 +126,7 @@
 8. **Mobile Responsiveness**
    - Test dashboard on mobile devices
    - Test marketplace comparison on small screens
-   - Verify gift cards display correctly
+   - Verify item cards display correctly
 
 9. **Browser Compatibility**
    - Test on Safari, Firefox, Edge
@@ -146,7 +146,7 @@
 2. **Gemini API Costs**: ~$0.06-0.30/day for AI extraction
    - Monthly: ~$2-10 depending on usage
    - Monitor at: https://aistudio.google.com/app/apikey
-   - **Solution**: Already limited to 100 gifts/day in cron job
+   - **Solution**: Already limited to 100 items/day in cron job
 
 3. **QStash Free Tier**: 100 requests/day
    - Currently using 3/day (well within limit)
@@ -175,14 +175,14 @@
 
 2. **Test Auto-Update Manually**
    ```bash
-   # Create test gift with auto-update enabled
+   # Create test item with auto-update enabled
    # Click "Update Now" button
    # Verify emails are received
    # Check that marketplace prices are updated
    ```
 
 3. **Create Test Data**
-   - Add 5-10 test gifts with real product URLs
+   - Add 5-10 test items with real product URLs
    - Enable auto-update on 2-3 of them
    - Enable price tracking on all
    - Set target prices below current prices to trigger alerts
@@ -221,7 +221,7 @@
 
 9. **Performance Optimization**
    - Add database indexes for faster queries
-   - Implement server-side pagination for large gift lists
+   - Implement server-side pagination for large item lists
    - Add loading skeletons for better UX
    - Optimize image loading and caching
 
@@ -229,16 +229,16 @@
 10. **Advanced Features**
     - Real-time price drop notifications (webhooks)
     - Price prediction using historical data
-    - Gift sharing between users
-    - Collaborative gift lists for families
+    - Item sharing between users
+    - Collaborative shopping lists for families
     - Mobile app (React Native)
-    - Browser extension for quick gift adding
+    - Browser extension for quick item adding
 
 11. **Business Features**
     - User accounts with subscription tiers
     - Premium features (more auto-updates, faster checks)
     - Affiliate links for marketplace purchases
-    - Gift recommendations based on price history
+    - Item recommendations based on price history
 
 ---
 
@@ -290,15 +290,15 @@ curl -X DELETE https://qstash.upstash.io/v2/schedules/SCHEDULE_ID \
 ### Testing Endpoints
 ```bash
 # Test AI price check cron
-curl https://giftflow-zeta.vercel.app/api/cron/check-prices-ai \
+curl https://your-app.vercel.app/api/cron/check-prices-ai \
   -H "Authorization: Bearer $CRON_SECRET"
 
 # Test auto-update cron
-curl https://giftflow-zeta.vercel.app/api/cron/auto-update-enabled-gifts \
+curl https://your-app.vercel.app/api/cron/auto-update-enabled-items \
   -H "Authorization: Bearer $CRON_SECRET"
 
 # Test weekly reminders
-curl https://giftflow-zeta.vercel.app/api/cron/weekly-reminders \
+curl https://your-app.vercel.app/api/cron/weekly-reminders \
   -H "Authorization: Bearer $CRON_SECRET"
 ```
 
@@ -364,7 +364,7 @@ curl https://giftflow-zeta.vercel.app/api/cron/weekly-reminders \
 - **/app/api/workers/** - Background worker endpoints (called by QStash)
 - **/actions/** - Server actions for mutations
 - **/lib/** - Utilities (price-scraper, marketplace-search, email, etc.)
-- **/components/** - React components (gift-card, marketplace-comparison, etc.)
+- **/components/** - React components (item-card, marketplace-comparison, etc.)
 - **/db/** - Database schema and migrations
 
 ### Environment Variables Location

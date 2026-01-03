@@ -5,7 +5,7 @@ This guide explains how to set up automatic daily price checking for tracked gif
 ## Overview
 
 The system automatically:
-- Checks prices for all gifts with URLs (max 100/day)
+- Checks prices for all items with URLs (max 100/day)
 - Runs daily at 6:00 AM UTC
 - Takes screenshots of product pages
 - Uses AI to extract current prices
@@ -90,8 +90,8 @@ Expected response:
 ## How It Works
 
 1. **Daily Trigger**: QStash calls your endpoint at 6:00 AM UTC
-2. **Fetch Gifts**: Retrieves up to 100 gifts with URLs from database
-3. **For Each Gift**:
+2. **Fetch Items**: Retrieves up to 100 items with URLs from database
+3. **For Each Item**:
    - Wait 2 seconds (rate limiting)
    - Take screenshot of product page via Screenshot API
    - Extract price using Gemini AI
@@ -123,7 +123,7 @@ Check logs in your deployment platform (Vercel, etc.):
 ## Limitations
 
 - **Rate Limit**: 2 seconds between requests (prevents bans)
-- **Batch Limit**: 100 products per cron run
+- **Batch Limit**: 100 items per cron run
 - **Daily Schedule**: Runs once per day (not real-time)
 - **API Costs**: Screenshot API charges per screenshot
 - **Timeout**: 5 minute max execution time
@@ -161,7 +161,7 @@ curl https://qstash.upstash.io/v2/schedules \
 
 ## Future Improvements
 
-- [ ] Smarter scheduling (check high-priority gifts more often)
+- [ ] Smarter scheduling (check high-priority items more often)
 - [ ] User preferences for check frequency
 - [ ] Batch processing by domain
 - [ ] Retry logic for failed screenshots

@@ -19,7 +19,7 @@ The system now supports tracking products across 4 marketplaces simultaneously:
 - `product_match_history` - Tracks AI matching decisions
 
 **Modified Tables:**
-- `gifts` table now has: `primaryMarketplace`, `autoSelectBestPrice`, `lastMarketplaceSync`
+- `items` table now has: `primaryMarketplace`, `autoSelectBestPrice`, `lastMarketplaceSync`
 
 **Performance Indexes:**
 - Composite indexes on gift_id + marketplace
@@ -54,8 +54,8 @@ The system now supports tracking products across 4 marketplaces simultaneously:
 ### 4. User Interface
 **Components:**
 - `components/marketplace-comparison.tsx` - Price comparison view
-- `components/gift-card.tsx` - Enhanced with marketplace display
-- `components/add-gift-dialog.tsx` - Auto-search integration
+- `components/item-card.tsx` - Enhanced with marketplace display
+- `components/add-item-dialog.tsx` - Auto-search integration
 
 **Features:**
 - Side-by-side price comparison
@@ -68,11 +68,11 @@ The system now supports tracking products across 4 marketplaces simultaneously:
 **File:** `app/api/cron/check-prices/route.ts`
 
 **Enhancements:**
-- Checks all marketplace products per gift
+- Checks all marketplace products per item
 - Auto-selects best (lowest) price
 - Updates primary marketplace automatically
 - Sends alerts with marketplace info
-- Backward compatible with single-URL gifts
+- Backward compatible with single-URL items
 
 ### 6. Maintenance
 **File:** `app/api/cron/clear-cache/route.ts`
@@ -83,9 +83,9 @@ Daily cache cleanup removes expired search results.
 
 ### For Users
 
-**1. Add a Gift with Marketplace Search:**
+**1. Add an Item with Marketplace Search:**
 ```
-1. Click "Add Gift"
+1. Click "Add Item"
 2. Enter product name (e.g., "wireless headphones")
 3. Wait 1 second - auto-search triggers
 4. See results from all marketplaces
@@ -96,7 +96,7 @@ Daily cache cleanup removes expired search results.
 
 **2. View Marketplace Comparison:**
 ```
-1. Find gift card on dashboard
+1. Find item card on dashboard
 2. Click "X Marketplaces" button
 3. View side-by-side comparison
 4. See best price highlighted in green
@@ -148,12 +148,12 @@ const MARKETPLACE_COLORS = {
 
 **Database Queries:**
 
-Get all marketplace products for a gift:
+Get all marketplace products for an item:
 ```typescript
 const products = await db
   .select()
   .from(marketplaceProducts)
-  .where(eq(marketplaceProducts.giftId, giftId));
+  .where(eq(marketplaceProducts.itemId, itemId));
 ```
 
 Find best price:
@@ -186,16 +186,16 @@ const bestPrice = Math.min(
 ### Manual Testing Checklist
 
 **Search Functionality:**
-- [ ] Enter product name in add gift dialog
+- [ ] Enter product name in add item dialog
 - [ ] Verify auto-search triggers after 1 second
 - [ ] Confirm results from multiple marketplaces
 - [ ] Check best price is highlighted
 - [ ] Test selecting individual marketplaces
 - [ ] Test "Track All" button
-- [ ] Verify gift created with multiple marketplace_products
+- [ ] Verify item created with multiple marketplace_products
 
 **Price Comparison:**
-- [ ] View gift card with marketplace products
+- [ ] View item card with marketplace products
 - [ ] Expand marketplace comparison
 - [ ] Verify best price highlighted in green
 - [ ] Test setting primary marketplace
@@ -204,7 +204,7 @@ const bestPrice = Math.min(
 - [ ] Check confidence badges display
 
 **Price Tracking:**
-- [ ] Enable price tracking on multi-marketplace gift
+- [ ] Enable price tracking on multi-marketplace item
 - [ ] Verify cron job updates all marketplaces
 - [ ] Check best price auto-selected
 - [ ] Confirm primary marketplace updates

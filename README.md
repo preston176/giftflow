@@ -29,7 +29,7 @@ PriceFlow solves the practical problem of fragmented shopping workflows by centr
 ### Dashboard Overview
 
 ![Dashboard](./docs/screenshots/dashboard.png)
-_Main dashboard with budget tracking and gift management_
+_Main dashboard with budget tracking and item management_
 
 ### Product Scraping from URLs/Screenshots
 
@@ -72,7 +72,7 @@ _Modern landing page with video demo section_
 ### Core Features
 
 - Track budgets in real time with visual progress indicators
-- Manage gifts with structured metadata (price, recipient, priority, notes)
+- Manage items with structured metadata (price, recipient, priority, notes)
 - Extract product metadata via AI from screenshots and product pages
 - Crop and process images before saving
 - Send automated price-drop alerts when items fall below target
@@ -248,8 +248,8 @@ bun run db:push
 This creates all necessary tables:
 
 - `profiles` - User profiles
-- `lists` - Gift lists
-- `gifts` - Individual gifts
+- `lists` - Item lists
+- `items` - Individual items
 - `list_collaborators` - Email-based sharing
 - `share_tokens` - Public share links
 - `price_history` - Price tracking
@@ -307,10 +307,10 @@ priceflow/
 │
 ├── components/                   # React Components
 │   ├── ui/                      # Shadcn/UI components
-│   ├── add-gift-dialog.tsx     # Gift creation modal
+│   ├── add-item-dialog.tsx     # Item creation modal
 │   ├── crop-image-dialog.tsx   # Image cropping
 │   ├── currency-selector.tsx   # Currency picker
-│   ├── gift-card.tsx           # Gift display card
+│   ├── item-card.tsx           # Item display card
 │   ├── header.tsx              # App header
 │   ├── seasonal-particles.tsx  # Animated effects
 │   ├── share-by-email-dialog.tsx # Email sharing
@@ -319,7 +319,7 @@ priceflow/
 │   └── ...
 │
 ├── actions/                      # Server Actions
-│   ├── gift-actions.ts         # Gift CRUD
+│   ├── item-actions.ts         # Item CRUD
 │   ├── list-actions.ts         # List management
 │   ├── profile-actions.ts      # User profiles
 │   └── share-actions.ts        # Sharing logic
@@ -422,21 +422,21 @@ bun run db:migrate   # Apply migrations
 - Mobile app (React Native)
 - Price drop notifications via email
 - Receipt scanning with OCR
-- Gift recommendations based on recipient
+- Item recommendations based on recipient
 
 ### v1.3.0 (Planned)
 
-- Family/group gift coordination
-- "Who's buying what" tracker to avoid duplicate gifts
+- Family/group item coordination
+- "Who's buying what" tracker to avoid duplicates
 - Integration with Amazon/Walmart APIs for real-time pricing
 - Budget analytics and spending insights
 
 ### Future Ideas
 
-- Voice-powered gift entry (Alexa/Google Home)
-- Browser extension for one-click gift saving
-- Social features (gift exchange groups)
-- Sustainability score for eco-friendly gifts
+- Voice-powered item entry (Alexa/Google Home)
+- Browser extension for one-click item saving
+- Social features (shopping groups)
+- Sustainability score for eco-friendly products
 
 ---
 

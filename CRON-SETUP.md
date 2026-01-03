@@ -2,10 +2,10 @@
 
 ## Overview
 
-Zawadi now includes **fully automated price checking** using AI (Gemini Vision/Text) to analyze product pages in the background, plus **automatic price updates** for gifts with auto-update enabled. Three cron jobs handle:
+PriceFlow now includes **fully automated price checking** using AI (Gemini Vision/Text) to analyze product pages in the background, plus **automatic price updates** for items with auto-update enabled. Three cron jobs handle:
 
 1. **AI Price Checks** - Daily automated price verification
-2. **Auto-Update Enabled Gifts** - Background updates with email notifications
+2. **Auto-Update Enabled Items** - Background updates with email notifications
 3. **Weekly Reminders** - Summary emails for users
 
 ---
@@ -25,7 +25,7 @@ Zawadi now includes **fully automated price checking** using AI (Gemini Vision/T
    CRON_SECRET=your_random_secret
 
    # Your production URL
-   NEXT_PUBLIC_APP_URL=https://zawadi.app
+   NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
    ```
 
 2. **Run the setup script**:
@@ -52,11 +52,11 @@ That's it! QStash will now run your cron jobs automatically.
 
 **What it does:**
 1. Runs daily (2 AM UTC recommended)
-2. Finds all gifts with URLs that haven't been checked in 24+ hours
+2. Finds all items with URLs that haven't been checked in 24+ hours
 3. Uses `extractProductMetadata()` AI function to fetch product info
 4. Updates current price, creates price history
 5. Sends email alerts when prices drop below target
-6. Limits to 100 gifts per run to manage API costs
+6. Limits to 100 items per run to manage API costs
 
 **Smart Features:**
 - 2-second delay between requests (respectful to AI API)
@@ -65,12 +65,12 @@ That's it! QStash will now run your cron jobs automatically.
 - Updates `lastPriceCheck` even on failures (avoid repeat checks)
 - Detailed logging for monitoring
 
-### Auto-Update Enabled Gifts Cron (`/api/cron/auto-update-enabled-gifts`)
+### Auto-Update Enabled Items Cron (`/api/cron/auto-update-enabled-items`)
 
 **What it does:**
 1. Runs daily (6 AM UTC recommended)
-2. Finds all gifts with `autoUpdateEnabled=true`
-3. Queues background price update jobs via QStash for each gift
+2. Finds all items with `autoUpdateEnabled=true`
+3. Queues background price update jobs via QStash for each item
 4. Staggers updates with 0-5 minute random delays to avoid overwhelming system
 5. Updates `lastAutoUpdate` timestamp for tracking
 6. Returns count of successful and failed updates
@@ -86,7 +86,7 @@ That's it! QStash will now run your cron jobs automatically.
 - `QSTASH_TOKEN` for background job scheduling
 - `CRON_SECRET` for endpoint authentication
 - `NEXT_PUBLIC_APP_URL` for worker callback URLs
-- Users must toggle "Auto: ON" in gift card UI
+- Users must toggle "Auto: ON" in item card UI
 
 ### Weekly Reminder Cron (`/api/cron/weekly-reminders`)
 
@@ -138,7 +138,7 @@ curl -X POST https://qstash.upstash.io/v2/schedules \
   -H "Authorization: Bearer YOUR_QSTASH_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "destination": "https://zawadi.app/api/cron/check-prices-ai",
+    "destination": "https://your-app.vercel.app/api/cron/check-prices-ai",
     "cron": "0 2 * * *",
     "headers": {
       "Authorization": "Bearer YOUR_CRON_SECRET"
@@ -146,13 +146,13 @@ curl -X POST https://qstash.upstash.io/v2/schedules \
   }'
 ```
 
-**Auto-Update Enabled Gifts (6 AM UTC):**
+**Auto-Update Enabled Items (6 AM UTC):**
 ```bash
 curl -X POST https://qstash.upstash.io/v2/schedules \
   -H "Authorization: Bearer YOUR_QSTASH_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "destination": "https://zawadi.app/api/cron/auto-update-enabled-gifts",
+    "destination": "https://your-app.vercel.app/api/cron/auto-update-enabled-items",
     "cron": "0 6 * * *",
     "headers": {
       "Authorization": "Bearer YOUR_CRON_SECRET"
@@ -166,7 +166,7 @@ curl -X POST https://qstash.upstash.io/v2/schedules \
   -H "Authorization: Bearer YOUR_QSTASH_TOKEN" \
   -H "Content-Type": application/json" \
   -d '{
-    "destination": "https://zawadi.app/api/cron/weekly-reminders",
+    "destination": "https://your-app.vercel.app/api/cron/weekly-reminders",
     "cron": "0 9 * * 0",
     "headers": {
       "Authorization": "Bearer YOUR_CRON_SECRET"
@@ -249,19 +249,19 @@ jobs:
       - name: Daily Price Check
         if: github.event.schedule == '0 2 * * *'
         run: |
-          curl -X GET "https://zawadi.app/api/cron/check-prices-ai" \
+          curl -X GET "https://your-app.vercel.app/api/cron/check-prices-ai" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
-      - name: Auto-Update Enabled Gifts
+      - name: Auto-Update Enabled Items
         if: github.event.schedule == '0 6 * * *'
         run: |
-          curl -X GET "https://zawadi.app/api/cron/auto-update-enabled-gifts" \
+          curl -X GET "https://your-app.vercel.app/api/cron/auto-update-enabled-items" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
       - name: Weekly Reminders
         if: github.event.schedule == '0 9 * * 0'
         run: |
-          curl -X GET "https://zawadi.app/api/cron/weekly-reminders" \
+          curl -X GET "https://your-app.vercel.app/api/cron/weekly-reminders" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 ```
 
@@ -289,9 +289,9 @@ jobs:
 **Setup:**
 1. Sign up at https://www.easycron.com/ or https://cron-job.org/
 2. Create three cron jobs:
-   - Daily at 2 AM: `https://zawadi.app/api/cron/check-prices-ai`
-   - Daily at 6 AM: `https://zawadi.app/api/cron/auto-update-enabled-gifts`
-   - Weekly Sunday 9 AM: `https://zawadi.app/api/cron/weekly-reminders`
+   - Daily at 2 AM: `https://your-app.vercel.app/api/cron/check-prices-ai`
+   - Daily at 6 AM: `https://your-app.vercel.app/api/cron/auto-update-enabled-items`
+   - Weekly Sunday 9 AM: `https://your-app.vercel.app/api/cron/weekly-reminders`
 3. Add Authorization header: `Bearer YOUR_CRON_SECRET`
 4. Set schedules
 
@@ -345,17 +345,17 @@ CRON_SECRET=your_generated_secret_here
 
 **Assumptions:**
 - 50 users
-- Each user has 10 gifts with URLs
-- Total: 500 gifts checked daily
+- Each user has 10 items with URLs
+- Total: 500 items checked daily
 - Gemini API: ~$0.001-0.005 per request
 
 **Monthly Cost:**
-- Daily checks: 500 gifts × 30 days = 15,000 requests
+- Daily checks: 500 items × 30 days = 15,000 requests
 - At $0.002/request = **$30/month**
 
 **Cost Optimization:**
-- Limit to 100 gifts per cron run (rotate checks)
-- Check only gifts with price tracking enabled
+- Limit to 100 items per cron run (rotate checks)
+- Check only items with price tracking enabled
 - Use caching for frequently checked products
 - Batch requests where possible
 
@@ -405,21 +405,21 @@ curl -X GET "http://localhost:3000/api/cron/weekly-reminders" \
   "failed": 5,
   "priceDrops": 12,
   "errors": ["..."],
-  "message": "Checked 100 gifts. 95 successful, 5 failed, 12 price drops detected."
+  "message": "Checked 100 items. 95 successful, 5 failed, 12 price drops detected."
 }
 ```
 
-*Auto-Update Enabled Gifts (`/api/cron/auto-update-enabled-gifts`):*
+*Auto-Update Enabled Items (`/api/cron/auto-update-enabled-items`):*
 ```json
 {
   "success": true,
   "message": "Queued 25 auto-updates",
-  "giftsUpdated": 25,
-  "giftsFailed": 0,
+  "itemsUpdated": 25,
+  "itemsFailed": 0,
   "results": [
     {
-      "giftId": "uuid",
-      "giftName": "Product Name",
+      "itemId": "uuid",
+      "itemName": "Product Name",
       "success": true,
       "messageId": "qstash-message-id"
     }
@@ -430,7 +430,7 @@ curl -X GET "http://localhost:3000/api/cron/weekly-reminders" \
 ### Logging
 
 All three cron endpoints log to console:
-- Each gift being processed
+- Each item being processed
 - Successes and failures
 - Price drops detected
 - Email alerts sent
@@ -451,7 +451,7 @@ All three cron endpoints log to console:
 # Required
 GEMINI_API_KEY=your_gemini_api_key
 RESEND_API_KEY=your_resend_api_key
-NEXT_PUBLIC_APP_URL=https://zawadi.app
+NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
 CRON_SECRET=your_random_secret
 
 # Optional (if using QStash)
@@ -490,7 +490,7 @@ await new Promise((resolve) => setTimeout(resolve, 2000)); // Adjust delay
 ```
 
 ### Batch Size
-Limit to 100 gifts per run to avoid timeouts and high costs:
+Limit to 100 items per run to avoid timeouts and high costs:
 
 ```typescript
 .limit(100); // Adjust batch size
@@ -559,7 +559,7 @@ All emails sent from: `noreply@prestonmayieka.com`
 ### High Costs
 - Reduce batch size (100 → 50)
 - Increase check interval (daily → every 2 days)
-- Only check gifts with `priceTrackingEnabled: true`
+- Only check items with `priceTrackingEnabled: true`
 - Cache frequently checked products
 
 ---
