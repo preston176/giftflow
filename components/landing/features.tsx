@@ -29,7 +29,7 @@ const features = [
     icon: Share2,
     title: "Shareable Wishlists",
     description:
-      "Share your gift lists with friends and family. Perfect for holidays, birthdays, and special occasions.",
+      "Share your wishlists with friends and family. Perfect for special occasions, events, and shopping needs.",
   },
   {
     icon: Bell,

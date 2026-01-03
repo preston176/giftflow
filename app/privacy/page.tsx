@@ -24,7 +24,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">Introduction</h2>
             <p className="text-muted-foreground">
-              At PriceFlow, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our holiday gift tracking application.
+              At PriceFlow, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our price tracking application.
             </p>
           </section>
 
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
               <li>Account information (name, email address)</li>
-              <li>Gift lists and wishlist data</li>
+              <li>Wishlist and item data</li>
               <li>Budget and spending information</li>
               <li>Price tracking preferences</li>
               <li>Shared list information</li>

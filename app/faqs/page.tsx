@@ -89,7 +89,7 @@ export default function FAQsPage() {
               Can I share my wishlists with others?
             </AccordionTrigger>
             <AccordionContent className="text-slate-400">
-              Absolutely! You can share your gift lists via unique link, email, or download as an image. Perfect for holidays, birthdays, or wedding registries. Recipients can view your list and see current prices for all items.
+              Absolutely! You can share your wishlists via unique link, email, or download as an image. Perfect for special occasions, events, or shopping needs. Recipients can view your list and see current prices for all items.
             </AccordionContent>
           </AccordionItem>
 

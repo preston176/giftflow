@@ -7,8 +7,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PriceFlow - Smart Holiday Gift Tracker",
-  description: "Your intelligent companion for stress-free holiday shopping. Track budgets, manage wishlists, and make gift-giving joyful again.",
+  title: "PriceFlow - Smart Item & Price Tracker",
+  description: "Your intelligent companion for stress-free shopping. Track budgets, manage wishlists, and find the best deals on items you want.",
 };
 
 export default function RootLayout({
