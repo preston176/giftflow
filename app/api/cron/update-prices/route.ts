@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { gifts, profiles } from "@/db/schema";
+import { items, profiles } from "@/db/schema";
 import { isNull, not, eq } from "drizzle-orm";
 import { sendPriceAlertEmail } from "@/lib/email";
 import { extractMetadataFromScreenshot } from "@/lib/price-scraper";
@@ -14,51 +14,51 @@ async function handleRequest(req: Request) {
   }
 
   try {
-    // Fetch gifts with URLs (limit to 100 per run to control costs)
-    const giftsWithUrls = await db
+    // Fetch items with URLs (limit to 100 per run to control costs)
+    const itemsWithUrls = await db
       .select({
-        gift: gifts,
+        item: items,
         userEmail: profiles.email,
       })
-      .from(gifts)
-      .innerJoin(profiles, eq(gifts.userId, profiles.id))
-      .where(not(isNull(gifts.url)))
+      .from(items)
+      .innerJoin(profiles, eq(items.userId, profiles.id))
+      .where(not(isNull(items.url)))
       .limit(100);
 
     let updated = 0;
     let errors = 0;
     let priceDrops = 0;
 
-    for (const { gift, userEmail } of giftsWithUrls) {
+    for (const { item, userEmail } of itemsWithUrls) {
       try {
         // Rate limit: wait 2s between requests to avoid overwhelming the API
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        console.log(`Checking price for: ${gift.name} (${gift.url})`);
+        console.log(`Checking price for: ${item.name} (${item.url})`);
 
         // Take screenshot using Screenshot API
-        const screenshot = await takeScreenshot(gift.url!);
+        const screenshot = await takeScreenshot(item.url!);
 
         // Use Gemini AI to extract price from screenshot
         const result = await extractMetadataFromScreenshot(screenshot);
 
         if (result.success && result.price) {
-          const oldPrice = parseFloat(gift.currentPrice || "0");
+          const oldPrice = parseFloat(item.currentPrice || "0");
           const newPrice = result.price;
-          const targetPrice = parseFloat(gift.targetPrice);
+          const targetPrice = parseFloat(item.targetPrice);
 
           console.log(
-            `Price check: ${gift.name} - Old: $${oldPrice}, New: $${newPrice}, Target: $${targetPrice}`
+            `Price check: ${item.name} - Old: $${oldPrice}, New: $${newPrice}, Target: $${targetPrice}`
           );
 
           // Update price in database
           await db
-            .update(gifts)
+            .update(items)
             .set({
               currentPrice: newPrice.toString(),
               updatedAt: new Date(),
             })
-            .where(eq(gifts.id, gift.id));
+            .where(eq(items.id, item.id));
 
           updated++;
 
@@ -71,34 +71,34 @@ async function handleRequest(req: Request) {
             const emailResult = await sendPriceAlertEmail({
               to: userEmail!,
               userName: userEmail!.split("@")[0], // Use email username as fallback
-              giftName: gift.name,
+              itemName: item.name,
               oldPrice: `$${oldPrice.toFixed(2)}`,
               newPrice: `$${newPrice.toFixed(2)}`,
               savings: `$${savings}`,
-              productUrl: gift.url || undefined,
+              productUrl: item.url || undefined,
             });
 
             if (emailResult.success) {
               priceDrops++;
             } else {
-              console.error(`Failed to send price alert for ${gift.name}: ${emailResult.error}`);
+              console.error(`Failed to send price alert for ${item.name}: ${emailResult.error}`);
             }
           }
         } else {
           console.error(
-            `Failed to extract price for ${gift.name}: ${result.error}`
+            `Failed to extract price for ${item.name}: ${result.error}`
           );
           errors++;
         }
       } catch (error) {
-        console.error(`Failed to update ${gift.name}:`, error);
+        console.error(`Failed to update ${item.name}:`, error);
         errors++;
       }
     }
 
     const summary = {
       success: true,
-      total: giftsWithUrls.length,
+      total: itemsWithUrls.length,
       updated,
       errors,
       priceDrops,

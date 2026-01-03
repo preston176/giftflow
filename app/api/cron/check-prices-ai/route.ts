@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { gifts, profiles, priceHistory } from "@/db/schema";
+import { items, profiles, priceHistory } from "@/db/schema";
 import { eq, and, or, isNull, sql } from "drizzle-orm";
 import { sendPriceAlertEmail } from "@/lib/email";
 import { extractProductMetadata } from "@/lib/price-scraper";
@@ -19,68 +19,68 @@ async function handleRequest(request: NextRequest) {
 
     console.log("Starting AI-powered price check cron job...");
 
-    // Get all gifts that need price checking
+    // Get all items that need price checking
     // Criteria: Has URL, not purchased, and either:
     // 1. Never checked (lastPriceCheck is null)
     // 2. Last checked more than 24 hours ago
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    const giftsToCheck = await db
+    const itemsToCheck = await db
       .select({
-        gift: gifts,
+        item: items,
         profile: profiles,
       })
-      .from(gifts)
-      .innerJoin(profiles, eq(gifts.userId, profiles.id))
+      .from(items)
+      .innerJoin(profiles, eq(items.userId, profiles.id))
       .where(
         and(
-          eq(gifts.isPurchased, false),
-          sql`${gifts.url} IS NOT NULL AND ${gifts.url} != ''`,
+          eq(items.isPurchased, false),
+          sql`${items.url} IS NOT NULL AND ${items.url} != ''`,
           or(
-            isNull(gifts.lastPriceCheck),
-            sql`${gifts.lastPriceCheck} < ${oneDayAgo}`
+            isNull(items.lastPriceCheck),
+            sql`${items.lastPriceCheck} < ${oneDayAgo}`
           )
         )
       )
       .limit(100); // Limit to prevent excessive API usage
 
-    console.log(`Found ${giftsToCheck.length} gifts to check`);
+    console.log(`Found ${itemsToCheck.length} items to check`);
 
     const results = {
-      total: giftsToCheck.length,
+      total: itemsToCheck.length,
       successful: 0,
       failed: 0,
       priceDrops: 0,
       errors: [] as string[],
     };
 
-    // Process each gift with delay to avoid rate limiting
-    for (const { gift, profile } of giftsToCheck) {
+    // Process each item with delay to avoid rate limiting
+    for (const { item, profile } of itemsToCheck) {
       try {
-        console.log(`Checking price for: ${gift.name} (${gift.url})`);
+        console.log(`Checking price for: ${item.name} (${item.url})`);
 
         // Use AI to extract product metadata from URL
-        const metadata = await extractProductMetadata(gift.url!);
+        const metadata = await extractProductMetadata(item.url!);
 
         if (metadata.success && metadata.price) {
           const newPrice = metadata.price;
-          const oldPrice = gift.currentPrice
-            ? parseFloat(gift.currentPrice)
+          const oldPrice = item.currentPrice
+            ? parseFloat(item.currentPrice)
             : null;
-          const targetPrice = parseFloat(gift.targetPrice);
+          const targetPrice = parseFloat(item.targetPrice);
 
           // Calculate lowest and highest prices
-          const currentLowest = gift.lowestPriceEver
-            ? Math.min(parseFloat(gift.lowestPriceEver), newPrice)
+          const currentLowest = item.lowestPriceEver
+            ? Math.min(parseFloat(item.lowestPriceEver), newPrice)
             : newPrice;
 
-          const currentHighest = gift.highestPriceEver
-            ? Math.max(parseFloat(gift.highestPriceEver), newPrice)
+          const currentHighest = item.highestPriceEver
+            ? Math.max(parseFloat(item.highestPriceEver), newPrice)
             : newPrice;
 
-          // Update gift with new price
+          // Update item with new price
           await db
-            .update(gifts)
+            .update(items)
             .set({
               currentPrice: newPrice.toString(),
               lastPriceCheck: new Date(),
@@ -88,11 +88,11 @@ async function handleRequest(request: NextRequest) {
               highestPriceEver: currentHighest.toString(),
               updatedAt: new Date(),
             })
-            .where(eq(gifts.id, gift.id));
+            .where(eq(items.id, item.id));
 
           // Create price history record
           await db.insert(priceHistory).values({
-            giftId: gift.id,
+            itemId: item.id,
             price: newPrice.toString(),
             source: "ai-cron",
             checkedAt: new Date(),
@@ -106,37 +106,37 @@ async function handleRequest(request: NextRequest) {
             const emailResult = await sendPriceAlertEmail({
               to: profile.email,
               userName: profile.name || "there",
-              giftName: gift.name,
+              itemName: item.name,
               oldPrice: oldPrice
                 ? `$${oldPrice.toFixed(2)}`
                 : `$${targetPrice.toFixed(2)}`,
               newPrice: `$${newPrice.toFixed(2)}`,
               savings: `$${(targetPrice - newPrice).toFixed(2)}`,
-              productUrl: gift.url || undefined,
+              productUrl: item.url || undefined,
             });
 
             if (emailResult.success) {
               results.priceDrops++;
-              console.log(`🎉 Price drop alert sent for: ${gift.name}`);
+              console.log(`🎉 Price drop alert sent for: ${item.name}`);
             } else {
-              console.error(`Failed to send price alert for ${gift.name}: ${emailResult.error}`);
-              results.errors.push(`Failed to send alert for ${gift.name}: ${emailResult.error}`);
+              console.error(`Failed to send price alert for ${item.name}: ${emailResult.error}`);
+              results.errors.push(`Failed to send alert for ${item.name}: ${emailResult.error}`);
             }
           }
 
           results.successful++;
-          console.log(`✓ Updated price for: ${gift.name} - $${newPrice}`);
+          console.log(`✓ Updated price for: ${item.name} - $${newPrice}`);
         } else {
           // Update lastPriceCheck even if failed, to avoid checking again too soon
           await db
-            .update(gifts)
+            .update(items)
             .set({
               lastPriceCheck: new Date(),
             })
-            .where(eq(gifts.id, gift.id));
+            .where(eq(items.id, item.id));
 
           results.failed++;
-          const error = `Failed to extract price for: ${gift.name}`;
+          const error = `Failed to extract price for: ${item.name}`;
           results.errors.push(error);
           console.log(`✗ ${error}`);
         }
@@ -145,7 +145,7 @@ async function handleRequest(request: NextRequest) {
         await new Promise((resolve) => setTimeout(resolve, 2000)); // 2 second delay
       } catch (error) {
         results.failed++;
-        const errorMsg = `Error checking ${gift.name}: ${error instanceof Error ? error.message : "Unknown error"}`;
+        const errorMsg = `Error checking ${item.name}: ${error instanceof Error ? error.message : "Unknown error"}`;
         results.errors.push(errorMsg);
         console.error(errorMsg);
       }
@@ -156,7 +156,7 @@ async function handleRequest(request: NextRequest) {
     return NextResponse.json({
       success: true,
       ...results,
-      message: `Checked ${results.total} gifts. ${results.successful} successful, ${results.failed} failed, ${results.priceDrops} price drops detected.`,
+      message: `Checked ${results.total} items. ${results.successful} successful, ${results.failed} failed, ${results.priceDrops} price drops detected.`,
     });
   } catch (error) {
     console.error("Cron job error:", error);

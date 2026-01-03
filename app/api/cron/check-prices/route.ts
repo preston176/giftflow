@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { verifySignatureAppRouter } from "@upstash/qstash/nextjs";
 import {
-  getGiftsForPriceCheck,
-  checkPricesForGifts,
+  getItemsForPriceCheck,
+  checkPricesForItems,
 } from "@/actions/price-actions";
 import { db } from "@/db";
-import { gifts, profiles, marketplaceProducts } from "@/db/schema";
+import { items, profiles, marketplaceProducts } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { sendPriceAlertEmail } from "@/lib/email";
 import { formatCurrency } from "@/lib/utils";
@@ -33,7 +33,7 @@ function getMarketplaceSearchUrl(
 }
 
 /**
- * Cron job to check prices for all tracked gifts
+ * Cron job to check prices for all tracked items
  * Triggered daily by Upstash QStash
  *
  * Setup:
@@ -45,13 +45,13 @@ function getMarketplaceSearchUrl(
  */
 async function handler(request: Request) {
   try {
-    // Get all gifts that need price checking
-    const giftsToCheck = await getGiftsForPriceCheck();
+    // Get all items that need price checking
+    const itemsToCheck = await getItemsForPriceCheck();
 
-    if (giftsToCheck.length === 0) {
+    if (itemsToCheck.length === 0) {
       return NextResponse.json({
         success: true,
-        message: "No gifts to check",
+        message: "No items to check",
         checked: 0,
       });
     }
@@ -61,14 +61,14 @@ async function handler(request: Request) {
     let totalFailed = 0;
     const alertsSent = [];
 
-    // Process each gift with marketplace tracking
-    for (const gift of giftsToCheck) {
+    // Process each item with marketplace tracking
+    for (const item of itemsToCheck) {
       try {
-        // Get all marketplace products for this gift
+        // Get all marketplace products for this item
         const mpProducts = await db
           .select()
           .from(marketplaceProducts)
-          .where(eq(marketplaceProducts.giftId, gift.id));
+          .where(eq(marketplaceProducts.itemId, item.id));
 
         let bestPrice: number | null = null;
         let bestMarketplace: string | null = null;
@@ -76,8 +76,8 @@ async function handler(request: Request) {
 
         // If no marketplace products, use traditional price check
         if (mpProducts.length === 0) {
-          const giftIds = [gift.id];
-          const results = await checkPricesForGifts(giftIds);
+          const itemIds = [item.id];
+          const results = await checkPricesForItems(itemIds);
           totalChecked += results.length;
           totalSuccessful += results.filter((r) => r.success).length;
           totalFailed += results.filter((r) => !r.success).length;
@@ -85,11 +85,11 @@ async function handler(request: Request) {
           // Handle alert for single marketplace
           const result = results[0];
           if (result?.success && result.shouldAlert) {
-            const alertResult = await sendAlert(gift, result.price!, null);
+            const alertResult = await sendAlert(item, result.price!, null);
             if (alertResult.success) {
-              alertsSent.push(gift.id);
+              alertsSent.push(item.id);
             } else {
-              console.error(`Failed to send alert for ${gift.id}: ${alertResult.error}`);
+              console.error(`Failed to send alert for ${item.id}: ${alertResult.error}`);
             }
           }
           continue;
@@ -101,7 +101,7 @@ async function handler(request: Request) {
             // Use search URL instead of product URL for screenshots
             const searchUrl = getMarketplaceSearchUrl(
               mp.marketplace,
-              gift.name
+              item.name
             );
             console.log(
               `[CRON] Checking ${mp.marketplace} via screenshot: ${searchUrl}`
@@ -141,39 +141,39 @@ async function handler(request: Request) {
           }
         }
 
-        // Update gift with best price and primary marketplace
+        // Update item with best price and primary marketplace
         if (bestPrice !== null && bestMarketplace !== null) {
-          const oldPrice = gift.currentPrice
-            ? parseFloat(gift.currentPrice)
+          const oldPrice = item.currentPrice
+            ? parseFloat(item.currentPrice)
             : null;
           const shouldAlert =
             oldPrice !== null &&
             bestPrice < oldPrice &&
-            bestPrice <= parseFloat(gift.targetPrice);
+            bestPrice <= parseFloat(item.targetPrice);
 
-          // Update gift
+          // Update item
           await db
-            .update(gifts)
+            .update(items)
             .set({
               currentPrice: bestPrice.toString(),
               primaryMarketplace: bestMarketplace,
               lastPriceCheck: new Date(),
               lastMarketplaceSync: new Date(),
             })
-            .where(eq(gifts.id, gift.id));
+            .where(eq(items.id, item.id));
 
           // Send alert if price dropped
           if (shouldAlert) {
-            const alertResult = await sendAlert(gift, bestPrice, bestMarketplace);
+            const alertResult = await sendAlert(item, bestPrice, bestMarketplace);
             if (alertResult.success) {
-              alertsSent.push(gift.id);
+              alertsSent.push(item.id);
             } else {
-              console.error(`Failed to send alert for ${gift.id}: ${alertResult.error}`);
+              console.error(`Failed to send alert for ${item.id}: ${alertResult.error}`);
             }
           }
         }
       } catch (error) {
-        console.error(`Failed to process gift ${gift.id}:`, error);
+        console.error(`Failed to process item ${item.id}:`, error);
         totalFailed++;
       }
     }
@@ -198,7 +198,7 @@ async function handler(request: Request) {
 }
 
 async function sendAlert(
-  gift: any,
+  item: any,
   newPrice: number,
   marketplace: string | null
 ): Promise<{ success: boolean; error?: string }> {
@@ -206,35 +206,35 @@ async function sendAlert(
     const [profile] = await db
       .select()
       .from(profiles)
-      .where(eq(profiles.id, gift.userId))
+      .where(eq(profiles.id, item.userId))
       .limit(1);
 
     if (!profile || !profile.email) {
       return { success: false, error: "No profile or email found" };
     }
 
-    const targetPrice = parseFloat(gift.targetPrice);
+    const targetPrice = parseFloat(item.targetPrice);
     const savings = targetPrice - newPrice;
 
     const emailResult = await sendPriceAlertEmail({
       to: profile.email,
       userName: profile.name || "there",
-      giftName: gift.name,
+      itemName: item.name,
       oldPrice: formatCurrency(targetPrice),
       newPrice: formatCurrency(newPrice),
       savings: formatCurrency(savings),
-      productUrl: gift.url || undefined,
+      productUrl: item.url || undefined,
     });
 
     if (!emailResult.success) {
-      console.error(`Failed to send alert for ${gift.id}: ${emailResult.error}`);
+      console.error(`Failed to send alert for ${item.id}: ${emailResult.error}`);
       return { success: false, error: emailResult.error };
     }
 
     return { success: true };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : "Unknown error";
-    console.error(`Failed to send alert for ${gift.id}:`, errorMsg);
+    console.error(`Failed to send alert for ${item.id}:`, errorMsg);
     return { success: false, error: errorMsg };
   }
 }
