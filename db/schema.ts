@@ -40,7 +40,7 @@ export const lists = pgTable("lists", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const gifts = pgTable("gifts", {
+export const items = pgTable("items", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
     .notNull()
@@ -72,9 +72,9 @@ export const gifts = pgTable("gifts", {
 
 export const priceHistory = pgTable("price_history", {
   id: uuid("id").primaryKey().defaultRandom(),
-  giftId: uuid("gift_id")
+  itemId: uuid("item_id")
     .notNull()
-    .references(() => gifts.id, { onDelete: "cascade" }),
+    .references(() => items.id, { onDelete: "cascade" }),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   source: text("source"),
   checkedAt: timestamp("checked_at").defaultNow().notNull(),
@@ -82,9 +82,9 @@ export const priceHistory = pgTable("price_history", {
 
 export const marketplaceProducts = pgTable("marketplace_products", {
   id: uuid("id").primaryKey().defaultRandom(),
-  giftId: uuid("gift_id")
+  itemId: uuid("item_id")
     .notNull()
-    .references(() => gifts.id, { onDelete: "cascade" }),
+    .references(() => items.id, { onDelete: "cascade" }),
   marketplace: text("marketplace").notNull(), // 'amazon', 'walmart', 'target', 'bestbuy'
   productUrl: text("product_url").notNull(),
   productName: text("product_name"),
@@ -110,9 +110,9 @@ export const marketplaceSearchCache = pgTable("marketplace_search_cache", {
 
 export const productMatchHistory = pgTable("product_match_history", {
   id: uuid("id").primaryKey().defaultRandom(),
-  giftId: uuid("gift_id")
+  itemId: uuid("item_id")
     .notNull()
-    .references(() => gifts.id, { onDelete: "cascade" }),
+    .references(() => items.id, { onDelete: "cascade" }),
   marketplace: text("marketplace").notNull(),
   productUrl: text("product_url").notNull(),
   matchConfidence: decimal("match_confidence", { precision: 3, scale: 2 }).notNull(),
@@ -156,7 +156,7 @@ export const feedbacks = pgTable("feedbacks", {
 
 export const profilesRelations = relations(profiles, ({ many }) => ({
   lists: many(lists),
-  gifts: many(gifts),
+  items: many(items),
 }));
 
 export const listsRelations = relations(lists, ({ one, many }) => ({
@@ -164,17 +164,17 @@ export const listsRelations = relations(lists, ({ one, many }) => ({
     fields: [lists.userId],
     references: [profiles.id],
   }),
-  gifts: many(gifts),
+  items: many(items),
   shareTokens: many(shareTokens),
 }));
 
-export const giftsRelations = relations(gifts, ({ one, many }) => ({
+export const itemsRelations = relations(items, ({ one, many }) => ({
   profile: one(profiles, {
-    fields: [gifts.userId],
+    fields: [items.userId],
     references: [profiles.id],
   }),
   list: one(lists, {
-    fields: [gifts.listId],
+    fields: [items.listId],
     references: [lists.id],
   }),
   priceHistory: many(priceHistory),
@@ -183,9 +183,9 @@ export const giftsRelations = relations(gifts, ({ one, many }) => ({
 }));
 
 export const priceHistoryRelations = relations(priceHistory, ({ one }) => ({
-  gift: one(gifts, {
-    fields: [priceHistory.giftId],
-    references: [gifts.id],
+  item: one(items, {
+    fields: [priceHistory.itemId],
+    references: [items.id],
   }),
 }));
 
@@ -208,16 +208,16 @@ export const listCollaboratorsRelations = relations(listCollaborators, ({ one })
 }));
 
 export const marketplaceProductsRelations = relations(marketplaceProducts, ({ one }) => ({
-  gift: one(gifts, {
-    fields: [marketplaceProducts.giftId],
-    references: [gifts.id],
+  item: one(items, {
+    fields: [marketplaceProducts.itemId],
+    references: [items.id],
   }),
 }));
 
 export const productMatchHistoryRelations = relations(productMatchHistory, ({ one }) => ({
-  gift: one(gifts, {
-    fields: [productMatchHistory.giftId],
-    references: [gifts.id],
+  item: one(items, {
+    fields: [productMatchHistory.itemId],
+    references: [items.id],
   }),
 }));
 
@@ -225,8 +225,8 @@ export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
 export type List = typeof lists.$inferSelect;
 export type NewList = typeof lists.$inferInsert;
-export type Gift = typeof gifts.$inferSelect;
-export type NewGift = typeof gifts.$inferInsert;
+export type Item = typeof items.$inferSelect;
+export type NewItem = typeof items.$inferInsert;
 export type ShareToken = typeof shareTokens.$inferSelect;
 export type NewShareToken = typeof shareTokens.$inferInsert;
 export type PriceHistory = typeof priceHistory.$inferSelect;
