@@ -1,8 +1,8 @@
 export const LIST_TEMPLATES = [
-  { name: "Christmas", description: "Holiday gift shopping" },
-  { name: "Birthday Wishlist", description: "Gifts for my birthday" },
-  { name: "Wedding Registry", description: "Wedding gift ideas" },
-  { name: "Baby Shower", description: "Baby essentials" },
-  { name: "Housewarming", description: "New home necessities" },
-  { name: "Anniversary Gifts", description: "Special occasion gifts" },
+  { name: "Shopping List", description: "General items to purchase" },
+  { name: "Wishlist", description: "Items I want to buy" },
+  { name: "Home Essentials", description: "Household items and supplies" },
+  { name: "Electronics", description: "Tech gadgets and devices" },
+  { name: "Special Occasion", description: "Items for events and celebrations" },
+  { name: "Baby Essentials", description: "Baby items and supplies" },
 ];
